@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swelli — Drawing</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .draw-layout{ display:grid; grid-template-columns: 230px 1fr; gap:20px; align-items:start; }
+  .tools{ display:flex; flex-direction:column; gap:18px; }
+  .swatches{ display:grid; grid-template-columns: repeat(5,1fr); gap:8px; }
+  .swatch{ width:100%; aspect-ratio:1; border-radius:50%; border:3px solid transparent; }
+  .swatch.selected{ border-color: var(--ink); transform: scale(1.05); }
+  .tool-label{ font-weight:800; font-size:13px; color: var(--ink-soft); margin-bottom:8px; display:block; }
+  .canvas-wrap{
+    background:#fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+    padding: 14px; display:flex; flex-direction:column; align-items:center;
+  }
+  .canvas-stack{ position:relative; width:100%; max-width:680px; aspect-ratio: 4/3; }
+  .canvas-stack canvas{
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    border-radius: var(--radius-md); touch-action:none;
+  }
+  #drawCanvas{ border:2px dashed var(--line); background:#fff; }
+  #previewCanvas{ pointer-events:none; }
+  .range-row{ display:flex; align-items:center; gap:10px; }
+  .draw-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 14px; }
+  .fill-row{ display:flex; align-items:center; gap:10px; }
+  .mini-switch{ width:40px; height:22px; border-radius:999px; background: var(--line); position:relative; border:none; padding:0; flex-shrink:0; }
+  .mini-switch .knob{ position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition: left .15s; }
+  .mini-switch.checked{ background: var(--mint-deep); }
+  .mini-switch.checked .knob{ left:20px; }
+  @media (max-width: 760px){ .draw-layout{ grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back" onclick="location.href='unwind.html'" aria-label="Back">←</button>
+  <div class="brand"><span class="brand-name">Swelli for Education</span></div>
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="checkin.html">Check In</a>
+  </nav>
+</div>
+
+<div class="page">
+  <h1 class="display" style="margin-bottom:16px; display:flex; align-items:center; gap:10px;"><svg class="icon icon-md" style="color:var(--coral);"><use href="icons.svg#icon-palette"/></svg>Drawing</h1>
+
+  <div class="draw-layout">
+    <div class="card tools">
+      <div>
+        <span class="tool-label">Tools</span>
+        <div class="tool-grid">
+          <button class="tool-btn active" data-tool="pencil" aria-label="Pencil"><svg class="icon"><use href="icons.svg#icon-pencil"/></svg></button>
+          <button class="tool-btn" data-tool="line" aria-label="Line"><svg class="icon"><use href="icons.svg#icon-shape-line"/></svg></button>
+          <button class="tool-btn" data-tool="rect" aria-label="Rectangle"><svg class="icon"><use href="icons.svg#icon-shape-rect"/></svg></button>
+          <button class="tool-btn" data-tool="circle" aria-label="Circle"><svg class="icon"><use href="icons.svg#icon-shape-circle"/></svg></button>
+          <button class="tool-btn" data-tool="eraser" aria-label="Eraser"><svg class="icon"><use href="icons.svg#icon-eraser"/></svg></button>
+        </div>
+      </div>
+
+      <div>
+        <span class="tool-label">Colors</span>
+        <div class="swatches" id="swatches"></div>
+      </div>
+
+      <div>
+        <span class="tool-label">Brush size</span>
+        <div class="range-row">
+          <span style="font-size:10px;">●</span>
+          <input type="range" id="brushSize" min="2" max="36" value="8" style="flex:1;">
+          <span style="font-size:20px;">●</span>
+        </div>
+      </div>
+
+      <div class="fill-row" id="fillRow" style="display:none;">
+        <button type="button" class="mini-switch" id="fillSwitch" role="switch" aria-checked="false"><span class="knob"></span></button>
+        <label for="fillSwitch" style="font-weight:700; font-size:13px;">Fill shape</label>
+      </div>
+
+      <button class="btn btn-ghost" id="clearBtn"><svg class="icon icon-sm"><use href="icons.svg#icon-trash"/></svg>&nbsp; Clear page</button>
+    </div>
+
+    <div class="canvas-wrap">
+      <div class="canvas-stack">
+        <canvas id="drawCanvas"></canvas>
+        <canvas id="previewCanvas"></canvas>
+      </div>
+      <div class="draw-actions">
+        <button class="btn btn-primary" id="saveDrawBtn">Save my drawing</button>
+        <button class="btn btn-secondary" id="downloadBtn"><svg class="icon icon-sm"><use href="icons.svg#icon-download"/></svg>&nbsp; Download</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Nice work! Your drawing was saved.</div>
+
+<script src="data.js"></script>
+<script>
+  Swelli.requireSession();
+
+  const colors = ['#25393A','#FF8A65','#F4B740','#3FB3A2','#6CC6FF','#C77DFF','#FF6B9A','#7BD389','#8B5E3C','#FFFFFF'];
+  const swatchWrap = document.getElementById('swatches');
+  let currentColor = colors[0];
+  colors.forEach((c,i)=>{
+    const b = document.createElement('button');
+    b.className = 'swatch' + (i===0?' selected':'');
+    b.style.background = c;
+    if(c === '#FFFFFF') b.style.border = '3px solid var(--line)';
+    b.addEventListener('click', ()=>{
+      currentColor = c;
+      document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+      b.classList.add('selected');
+    });
+    swatchWrap.appendChild(b);
+  });
+
+  let tool = 'pencil';
+  const fillRow = document.getElementById('fillRow');
+  const fillSwitch = document.getElementById('fillSwitch');
+  let fillShape = false;
+  fillSwitch.addEventListener('click', ()=>{
+    fillShape = !fillShape;
+    fillSwitch.classList.toggle('checked', fillShape);
+    fillSwitch.setAttribute('aria-checked', String(fillShape));
+  });
+  document.querySelectorAll('.tool-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      tool = btn.dataset.tool;
+      document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      fillRow.style.display = (tool === 'rect' || tool === 'circle') ? 'flex' : 'none';
+    });
+  });
+
+  const drawCanvas = document.getElementById('drawCanvas');
+  const previewCanvas = document.getElementById('previewCanvas');
+  const ctx = drawCanvas.getContext('2d');
+  const pctx = previewCanvas.getContext('2d');
+
+  function fitCanvas(canvas, context, preserve){
+    const rect = canvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    let prev = null;
+    if(preserve){
+      prev = document.createElement('canvas');
+      prev.width = canvas.width; prev.height = canvas.height;
+      prev.getContext('2d').drawImage(canvas,0,0);
+    }
+    canvas.width = rect.width * ratio;
+    canvas.height = rect.height * ratio;
+    context.scale(ratio, ratio);
+    if(preserve){
+      context.fillStyle = '#fff';
+      context.fillRect(0,0,rect.width,rect.height);
+      if(prev) context.drawImage(prev, 0, 0, prev.width/ratio, prev.height/ratio);
+    }
+    return rect;
+  }
+  function fitAll(){
+    fitCanvas(drawCanvas, ctx, true);
+    fitCanvas(previewCanvas, pctx, false);
+  }
+  window.addEventListener('resize', fitAll);
+  fitAll();
+
+  let drawing = false, startX=0, startY=0, lastX=0, lastY=0;
+  function pos(e){
+    const rect = drawCanvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function strokeStyleFor(){
+    pctx.strokeStyle = tool === 'eraser' ? '#ffffff' : currentColor;
+    pctx.fillStyle = tool === 'eraser' ? '#ffffff' : currentColor;
+    ctx.strokeStyle = tool === 'eraser' ? '#ffffff' : currentColor;
+    ctx.fillStyle = tool === 'eraser' ? '#ffffff' : currentColor;
+    const w = document.getElementById('brushSize').value;
+    pctx.lineWidth = w; ctx.lineWidth = w;
+    pctx.lineCap = 'round'; pctx.lineJoin = 'round';
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  }
+
+  function drawShape(context, x0, y0, x1, y1){
+    context.beginPath();
+    if(tool === 'line'){
+      context.moveTo(x0,y0); context.lineTo(x1,y1); context.stroke();
+    } else if(tool === 'rect'){
+      const w = x1-x0, h = y1-y0;
+      if(fillShape) context.fillRect(x0,y0,w,h); else context.strokeRect(x0,y0,w,h);
+    } else if(tool === 'circle'){
+      const rx = Math.abs(x1-x0)/2, ry = Math.abs(y1-y0)/2;
+      const cx = (x0+x1)/2, cy = (y0+y1)/2;
+      context.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+      if(fillShape) context.fill(); else context.stroke();
+    }
+  }
+
+  function onDown(e){
+    drawCanvas.setPointerCapture && drawCanvas.setPointerCapture(e.pointerId);
+    drawing = true;
+    const p = pos(e);
+    startX = lastX = p.x; startY = lastY = p.y;
+    strokeStyleFor();
+  }
+  function onMove(e){
+    if(!drawing) return;
+    const p = pos(e);
+    if(tool === 'pencil' || tool === 'eraser'){
+      ctx.beginPath();
+      ctx.moveTo(lastX,lastY);
+      ctx.lineTo(p.x,p.y);
+      ctx.stroke();
+      lastX = p.x; lastY = p.y;
+    } else {
+      const rect = previewCanvas.getBoundingClientRect();
+      pctx.clearRect(0,0,rect.width,rect.height);
+      drawShape(pctx, startX, startY, p.x, p.y);
+    }
+  }
+  function onUp(e){
+    if(!drawing) return;
+    drawing = false;
+    if(tool === 'line' || tool === 'rect' || tool === 'circle'){
+      const p = pos(e);
+      drawShape(ctx, startX, startY, p.x, p.y);
+      const rect = previewCanvas.getBoundingClientRect();
+      pctx.clearRect(0,0,rect.width,rect.height);
+    }
+  }
+
+  drawCanvas.addEventListener('pointerdown', onDown);
+  drawCanvas.addEventListener('pointermove', onMove);
+  drawCanvas.addEventListener('pointerup', onUp);
+  drawCanvas.addEventListener('pointercancel', onUp);
+  drawCanvas.addEventListener('pointerleave', (e)=>{ if(tool==='pencil'||tool==='eraser') drawing=false; });
+
+  document.getElementById('clearBtn').addEventListener('click', ()=>{
+    const rect = drawCanvas.getBoundingClientRect();
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0,0,rect.width,rect.height);
+  });
+
+  const toast = document.getElementById('toast');
+  document.getElementById('saveDrawBtn').addEventListener('click', ()=>{
+    Swelli.updateLastEntry({ activity: 'drawing', activityDetail: 'Drew a picture' });
+    toast.classList.add('show');
+    setTimeout(()=> toast.classList.remove('show'), 2200);
+  });
+
+  document.getElementById('downloadBtn').addEventListener('click', ()=>{
+    const link = document.createElement('a');
+    link.download = 'my-swelli-drawing.png';
+    link.href = drawCanvas.toDataURL('image/png');
+    link.click();
+  });
+</script>
+</body>
+</html>

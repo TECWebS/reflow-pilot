@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swelli — My Map</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .map-step{ margin-bottom: 24px; display:none; }
+  .map-step.active{ display:block; }
+  .map-step h2{ font-size: 18px; margin-bottom: 4px; }
+  .map-step .hint{ color: var(--ink-soft); font-weight:700; font-size: 13px; margin: 0 0 12px; }
+  .pick-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:12px; }
+  .pick-card{
+    background:#fff; border:3px solid var(--line); border-radius: var(--radius-md);
+    padding: 14px 8px; text-align:center; font-weight:800; font-size:13px;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .pick-card .icon{ width:30px; height:30px; }
+  .pick-card:hover{ border-color: var(--mint); }
+  .pick-card.selected{ border-color: var(--coral); background:#FFF1EC; }
+  .issue-box textarea{
+    width:100%; min-height: 100px; border-radius: var(--radius-md); border:2px solid var(--line);
+    padding: 14px 16px; font-family:'Nunito'; font-size:15px; font-weight:600; resize: vertical;
+    background: var(--cream);
+  }
+  .issue-box textarea:focus{ outline:none; border-color: var(--mint); background:#fff; }
+  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin: 10px 0 0; }
+  .chip{
+    background: var(--mint-paler); border:2px solid var(--mint-pale); border-radius:999px;
+    padding: 8px 14px; font-size:13px; font-weight:700; color: var(--mint-deep);
+  }
+  .chip:hover{ background: var(--mint-pale); }
+  .path-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; overflow-x:auto; padding: 26px 6px 6px; }
+  .path-node{ display:flex; flex-direction:column; align-items:center; gap:8px; min-width: 86px; flex-shrink:0; }
+  .path-node .bubble{
+    width:60px; height:60px; border-radius:50%; background: var(--mint-pale); display:flex; align-items:center; justify-content:center;
+    border: 3px solid var(--mint);
+  }
+  .path-node .bubble .icon{ width:26px; height:26px; color: var(--mint-deep); }
+  .path-node.start .bubble{ background: #FFE3D6; border-color: var(--coral); }
+  .path-node.start .bubble .icon{ width:30px; height:30px; color:inherit; }
+  .path-node.goal .bubble{ background: #FFF3D2; border-color: var(--gold-deep); }
+  .path-node.goal .bubble .icon{ color: var(--gold-deep); }
+  .path-node .cap{ font-size:12px; font-weight:800; text-align:center; color: var(--ink-soft); max-width:90px; }
+  .path-line{ flex:1; height:3px; background: repeating-linear-gradient(90deg, var(--mint) 0 8px, transparent 8px 16px); margin-top: 28px; min-width: 30px; }
+  .final-steps{ display:flex; flex-direction:column; gap:12px; margin-top: 22px; }
+  .step-card{ display:flex; gap:14px; align-items:flex-start; background: var(--cream); border-radius: var(--radius-md); padding: 14px 16px; }
+  .step-card .n{
+    width:30px; height:30px; border-radius:50%; background: var(--mint-deep); color:#fff; font-weight:800;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Baloo 2';
+  }
+  .actions-row{ text-align:center; margin-top: 18px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  @media (max-width:640px){ .pick-grid{ grid-template-columns: repeat(2,1fr); } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back" onclick="location.href='unwind.html'" aria-label="Back">←</button>
+  <div class="brand"><span class="brand-name">Swelli for Education</span></div>
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="checkin.html">Check In</a>
+  </nav>
+</div>
+
+<div class="page narrow">
+  <h1 class="display" style="margin-bottom:18px; display:flex; align-items:center; gap:10px;"><svg class="icon icon-md" style="color:var(--coral);"><use href="icons.svg#icon-clover"/></svg>My Map</h1>
+
+  <!-- Step 1 -->
+  <div class="card map-step active" id="step1">
+    <h2>Step 1 — How are you feeling right now?</h2>
+    <p class="hint">Pick the feeling that's closest.</p>
+    <div class="pick-grid" id="feelingGrid"></div>
+    <div class="actions-row"><button class="btn btn-primary" id="toStep2" disabled>Next →</button></div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="card map-step" id="step2">
+    <h2>Step 2 — What's going on?</h2>
+    <p class="hint">Tell us in your own words — there's no wrong way to say it.</p>
+    <div class="issue-box">
+      <textarea id="issueText" placeholder="Type what's going on, or tap one below to start…"></textarea>
+      <div class="chip-row" id="chipRow"></div>
+    </div>
+    <div class="actions-row">
+      <button class="btn btn-ghost" id="toStep1">← Back</button>
+      <button class="btn btn-primary" id="toStep3" disabled>Get suggested steps →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: drag to reorder -->
+  <div class="card map-step" id="step3">
+    <h2>Step 3 — Put these in your order</h2>
+    <p class="hint">Drag <svg class="icon icon-sm" style="vertical-align:-3px; color:var(--ink-soft);"><use href="icons.svg#icon-grip"/></svg> to reorder these into whatever order makes the most sense to you.</p>
+    <div class="drag-list" id="dragList"></div>
+    <div class="actions-row">
+      <button class="btn btn-ghost" id="toStep2b">← Back</button>
+      <button class="btn btn-primary" id="toStep4">Build my path →</button>
+    </div>
+  </div>
+
+  <!-- Step 4: final path -->
+  <div class="card map-step" id="step4">
+    <h2 style="margin-bottom:4px;">Your path</h2>
+    <p class="hint">Here's the route you built, in the order you chose.</p>
+    <div class="path-row" id="pathRow"></div>
+    <div class="final-steps" id="finalSteps"></div>
+    <div class="actions-row">
+      <button class="btn btn-secondary" id="saveMapBtn">Save my map</button>
+      <button class="btn btn-ghost" id="startOverBtn">Make a new map</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Nice work! Your map was saved.</div>
+
+<script src="data.js"></script>
+<script>
+  Swelli.requireSession();
+
+  const feelings = [
+    { id:'happy', label:'Happy' }, { id:'laughing', label:'Silly' }, { id:'tired', label:'Tired' },
+    { id:'angry', label:'Angry' }, { id:'sad', label:'Sad' }, { id:'anxious', label:'Worried' },
+  ];
+  let chosenFeeling = null;
+
+  const feelGrid = document.getElementById('feelingGrid');
+  feelings.forEach(f=>{
+    const b = document.createElement('button');
+    b.className = 'pick-card';
+    b.innerHTML = `<svg class="icon"><use href="icons.svg#${Swelli.MOOD_ICONS[f.id]}"/></svg>${f.label}`;
+    b.addEventListener('click', ()=>{
+      chosenFeeling = f;
+      feelGrid.querySelectorAll('.pick-card').forEach(c=>c.classList.remove('selected'));
+      b.classList.add('selected');
+      document.getElementById('toStep2').disabled = false;
+    });
+    feelGrid.appendChild(b);
+  });
+
+  // ---- quick chips (help kids who don't know what to type) ----
+  const chips = [
+    "A friend and I are fighting",
+    "I feel left out",
+    "I'm worried about a test",
+    "I'm having a hard time focusing",
+    "I miss someone",
+    "Something at home is bothering me",
+  ];
+  const chipRow = document.getElementById('chipRow');
+  chips.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.textContent = c;
+    b.addEventListener('click', ()=>{
+      issueText.value = c;
+      document.getElementById('toStep3').disabled = false;
+    });
+    chipRow.appendChild(b);
+  });
+
+  const issueText = document.getElementById('issueText');
+  issueText.addEventListener('input', ()=>{
+    document.getElementById('toStep3').disabled = issueText.value.trim().length === 0;
+  });
+
+  // ---- step navigation ----
+  function showStep(id){
+    document.querySelectorAll('.map-step').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  document.getElementById('toStep2').addEventListener('click', ()=> showStep('step2'));
+  document.getElementById('toStep1').addEventListener('click', ()=> showStep('step1'));
+  document.getElementById('toStep2b').addEventListener('click', ()=> showStep('step2'));
+
+  // ---- keyword-matched step suggestions ----
+  const stepBank = [
+    { text:"Take 5 slow breaths before doing anything else", tags:['angry','worried','tired'] },
+    { text:"Tell a trusted adult or friend how you feel", tags:['sad','worried','help'] },
+    { text:"Use 'I feel...' words to explain what happened", tags:['angry','friend'] },
+    { text:"Ask if you can start over or try again together", tags:['friend'] },
+    { text:"Write or draw about it before talking to anyone", tags:['sad'] },
+    { text:"Pick the smallest first step and just start there", tags:['focus','tired'] },
+    { text:"Give yourself credit for noticing how you feel", tags:['proud'] },
+    { text:"Ask one trusted adult for help today", tags:['help'] },
+    { text:"Take a break, then try again with a calm body", tags:['angry','tired'] },
+    { text:"Take a few minutes to rest before trying again", tags:['tired'] },
+  ];
+  const keywordTags = {
+    friend:['friend'], mean:['friend','help'], fight:['angry','friend'], bully:['friend','help'],
+    mad:['angry'], angry:['angry'], sad:['sad'], cry:['sad'], lonely:['sad','friend'], 'left out':['sad','friend'],
+    focus:['focus'], distract:['focus'], tired:['tired'], sleep:['tired'],
+    worry:['worried'], worried:['worried'], scare:['worried'], nervous:['worried'], test:['worried','focus'],
+    help:['help'], hurt:['sad','help'], miss:['sad'], home:['sad','help'],
+  };
+  const feelingTag = { happy:'proud', laughing:'proud', tired:'tired', angry:'angry', sad:'sad', anxious:'worried' };
+
+  let stepsArray = [];
+
+  function generateSteps(){
+    const text = issueText.value.toLowerCase();
+    const active = new Set();
+    if(chosenFeeling) active.add(feelingTag[chosenFeeling.id]);
+    Object.keys(keywordTags).forEach(k=>{
+      if(text.includes(k)) keywordTags[k].forEach(t=>active.add(t));
+    });
+    const scored = stepBank
+      .map(s => ({ s, score: s.tags.filter(t=>active.has(t)).length }))
+      .sort((a,b)=> b.score - a.score);
+
+    let chosen = scored.filter(x=>x.score>0).slice(0,5).map(x=>x.s.text);
+    if(chosen.length < 4){
+      const fillers = stepBank.map(s=>s.text).filter(t=>!chosen.includes(t));
+      while(chosen.length < 4 && fillers.length) chosen.push(fillers.shift());
+    }
+    return chosen;
+  }
+
+  document.getElementById('toStep3').addEventListener('click', ()=>{
+    stepsArray = generateSteps();
+    renderDragList();
+    showStep('step3');
+  });
+
+  // ---- drag-and-drop reorder (Pointer Events — works on touch + mouse) ----
+  function renderDragList(){
+    const wrap = document.getElementById('dragList');
+    wrap.innerHTML = '';
+    stepsArray.forEach((text, i)=>{
+      const item = document.createElement('div');
+      item.className = 'drag-item';
+      item.innerHTML = `
+        <span class="grip"><svg class="icon"><use href="icons.svg#icon-grip"/></svg></span>
+        <span class="n">${i+1}</span>
+        <span class="txt">${text}</span>`;
+      wrap.appendChild(item);
+      item.querySelector('.grip').addEventListener('pointerdown', (e)=> onGripDown(e, item));
+    });
+  }
+
+  function onGripDown(e, item){
+    e.preventDefault();
+    const list = document.getElementById('dragList');
+    const startIndex = Array.from(list.children).indexOf(item);
+    const rect = item.getBoundingClientRect();
+    const offsetY = e.clientY - rect.top;
+
+    const placeholder = document.createElement('div');
+    placeholder.className = 'drag-item placeholder';
+    placeholder.style.height = rect.height + 'px';
+
+    item.style.position = 'fixed';
+    item.style.top = rect.top + 'px';
+    item.style.left = rect.left + 'px';
+    item.style.width = rect.width + 'px';
+    item.style.zIndex = '50';
+    item.classList.add('dragging');
+    list.insertBefore(placeholder, item);
+
+    function onMove(ev){
+      item.style.top = (ev.clientY - offsetY) + 'px';
+      const siblings = Array.from(list.children).filter(el => el !== placeholder && el !== item);
+      let inserted = false;
+      for(const sib of siblings){
+        const sRect = sib.getBoundingClientRect();
+        if(ev.clientY < sRect.top + sRect.height/2){
+          list.insertBefore(placeholder, sib);
+          inserted = true;
+          break;
+        }
+      }
+      if(!inserted) list.appendChild(placeholder);
+    }
+    function onUp(){
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      const finalIndex = Array.from(list.children).indexOf(placeholder);
+      list.insertBefore(item, placeholder);
+      list.removeChild(placeholder);
+      item.style.position=''; item.style.top=''; item.style.left=''; item.style.width=''; item.style.zIndex='';
+      item.classList.remove('dragging');
+
+      const moved = stepsArray.splice(startIndex,1)[0];
+      stepsArray.splice(finalIndex,0,moved);
+      renderDragList();
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  }
+
+  // ---- Step 4: build final path from the user's chosen order ----
+  document.getElementById('toStep4').addEventListener('click', ()=>{
+    const pathRow = document.getElementById('pathRow');
+    const line = `<div class="path-line"></div>`;
+    const startNode = `<div class="path-node start"><div class="bubble"><svg class="icon"><use href="icons.svg#${Swelli.MOOD_ICONS[chosenFeeling.id]}"/></svg></div><div class="cap">You are here</div></div>`;
+    const midNodes = stepsArray.map((_,i)=>`<div class="path-node"><div class="bubble"><svg class="icon"><use href="icons.svg#icon-footprint"/></svg></div><div class="cap">Step ${i+1}</div></div>${line}`).join('');
+    const goalNode = `<div class="path-node goal"><div class="bubble"><svg class="icon"><use href="icons.svg#icon-target"/></svg></div><div class="cap">Where you're headed</div></div>`;
+    pathRow.innerHTML = startNode + line + midNodes + goalNode;
+
+    document.getElementById('finalSteps').innerHTML = stepsArray
+      .map((s,i)=>`<div class="step-card"><div class="n">${i+1}</div><div>${s}</div></div>`).join('');
+
+    showStep('step4');
+  });
+
+  const toast = document.getElementById('toast');
+  document.getElementById('saveMapBtn').addEventListener('click', ()=>{
+    const text = issueText.value.trim();
+    Swelli.updateLastEntry({
+      activity: 'mapping',
+      activityDetail: text.slice(0,200),
+    });
+
+    const hits = Swelli.checkAndFlag(text, 'My Map issue');
+    if(hits.length){
+      Swelli.updateLastEntry({ flagged: true, flagCategories: hits.map(h => h.category) });
+      Swelli.showSafetyOverlay(hits);
+    } else {
+      toast.classList.add('show');
+      setTimeout(()=> toast.classList.remove('show'), 2200);
+    }
+  });
+
+  document.getElementById('startOverBtn').addEventListener('click', ()=>{
+    chosenFeeling = null;
+    issueText.value = '';
+    document.getElementById('toStep2').disabled = true;
+    document.getElementById('toStep3').disabled = true;
+    document.querySelectorAll('.pick-card').forEach(c=>c.classList.remove('selected'));
+    showStep('step1');
+  });
+</script>
+</body>
+</html>

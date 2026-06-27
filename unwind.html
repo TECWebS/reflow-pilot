@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swelli — Unwind</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body{ background: var(--mint-pale); min-height:100vh; }
+  .unwind-stage{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 60px 16px; gap:20px; }
+  .unwind-card{
+    background:#fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+    padding: 36px 30px; max-width: 520px; width:100%; text-align:center;
+  }
+  .unwind-card h1{ font-size: 22px; margin-bottom: 22px; }
+  .suggest{
+    display:none; align-items:center; gap:8px; background: var(--mint-pale); color: var(--mint-deep);
+    font-weight:800; font-size: 13px; padding: 10px 16px; border-radius: 999px; max-width: fit-content; margin: 0 auto 20px;
+  }
+  .unwind-grid{ display:grid; grid-template-columns: repeat(2,1fr); gap:16px; }
+  .unwind-btn{
+    background: var(--mint-paler); border-radius: var(--radius-md); padding: 22px 18px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    font-family:'Nunito'; font-weight:700; font-size: 15px; color: var(--ink); border: 2px solid transparent;
+  }
+  .unwind-btn:hover{ border-color: var(--mint); transform: translateY(-2px); }
+  .unwind-btn .icon{ color: var(--mint-deep); }
+  @media (max-width: 480px){ .unwind-grid{ grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back" onclick="location.href='checkin.html'" aria-label="Back">←</button>
+  <div class="brand"><span class="brand-name">Swelli for Education</span></div>
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="checkin.html">Check In</a>
+  </nav>
+</div>
+
+<div class="unwind-stage">
+  <div class="unwind-card">
+    <h1 class="display">What would you like to do next?</h1>
+
+    <div class="suggest" id="suggestBanner"><span id="suggestText"></span></div>
+
+    <div class="unwind-grid">
+      <button class="unwind-btn" data-activity="writing">Write it out <svg class="icon"><use href="icons.svg#icon-pencil"/></svg></button>
+      <button class="unwind-btn" data-activity="drawing">Draw it out <svg class="icon"><use href="icons.svg#icon-palette"/></svg></button>
+      <button class="unwind-btn" data-activity="games">Play it out <svg class="icon"><use href="icons.svg#icon-gamepad"/></svg></button>
+      <button class="unwind-btn" data-activity="mapping">Map it out <svg class="icon"><use href="icons.svg#icon-clover"/></svg></button>
+    </div>
+  </div>
+
+  <a class="btn btn-ghost" href="home.html">Maybe later — back to my garden</a>
+</div>
+
+<script src="data.js"></script>
+<script>
+  Swelli.requireSession();
+  const entries = Swelli.getEntries();
+  const lastMood = entries.length ? entries[entries.length-1].mood : null;
+
+  const tips = {
+    tired: "Feeling tired? Try Play it out — Breathing Buddy is gentle and calming.",
+    angry: "Feeling angry? Draw it out, or try a grounding game, to let off some steam.",
+    sad: "Feeling sad? Writing it down, or mapping a small next step, often helps.",
+    anxious: "Feeling worried? Play it out is a great calm place to land.",
+  };
+  if(lastMood && tips[lastMood]){
+    document.getElementById('suggestText').textContent = tips[lastMood];
+    document.getElementById('suggestBanner').style.display = 'flex';
+  }
+
+  const pages = { writing:'writing.html', drawing:'drawing.html', games:'games.html', mapping:'mapping.html' };
+  document.querySelectorAll('.unwind-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      Swelli.updateLastEntry({ activity: btn.dataset.activity });
+      window.location.href = pages[btn.dataset.activity];
+    });
+  });
+</script>
+</body>
+</html>

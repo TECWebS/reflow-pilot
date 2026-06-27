@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swelli — My Garden</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .hero{ display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom: 22px; flex-wrap:wrap; }
+  .hero h1{ font-size: 28px; }
+  .hero p{ margin: 4px 0 0; color: var(--ink-soft); font-weight:700; }
+  .checkin-banner{
+    background: linear-gradient(120deg, var(--coral), var(--coral-deep));
+    color:#fff; border-radius: var(--radius-lg); padding: 22px 26px;
+    display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
+    box-shadow: var(--shadow-pop); margin: 22px 0;
+  }
+  .checkin-banner h2{ color:#fff; font-size: 20px; }
+  .checkin-banner p{ margin:4px 0 0; opacity:0.92; font-weight:600; font-size:14px; }
+  .checkin-banner .btn-primary{ background:#fff; color: var(--coral-deep); box-shadow:none; }
+  .checkin-banner .btn-primary:hover{ background:#FFF3EE; }
+  .grid-2{ display:grid; grid-template-columns: 1.3fr 1fr; gap:20px; align-items:start; }
+  .quote-text{ font-family:'Baloo 2'; font-size: 19px; text-align:center; color: var(--mint-deep); margin: 6px 0; }
+  .quote-author{ text-align:center; color: var(--ink-soft); font-weight:700; font-size:13px; }
+  .entries-list{ display:flex; flex-direction:column; gap:12px; margin-top: 10px; }
+  .entry-row{ display:flex; align-items:center; gap:12px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--cream); }
+  .entry-row .meta{ font-size: 13px; color: var(--ink-soft); font-weight:700; }
+  .entry-row .what{ font-weight:800; }
+  .unlock-note{ display:flex; align-items:center; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .unlock-note .icon{ color: var(--mint-deep); }
+  .stat-chip .icon{ color: var(--mint-deep); margin: 0 auto 4px; }
+  .preview-banner{
+    display:none; align-items:center; justify-content:center; gap:10px;
+    background: var(--ink); color:#fff; font-weight:700; font-size: 14px;
+    padding: 10px 16px; text-align:center;
+  }
+  .preview-banner a{ color: var(--gold); text-decoration: underline; font-weight:800; cursor:pointer; }
+  .empty-note{ text-align:center; color: var(--ink-soft); font-weight:700; font-size:13px; padding: 10px 0; }
+  @media (max-width: 760px){
+    .grid-2{ grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="preview-banner" id="previewBanner">
+  <svg class="icon icon-sm"><use href="icons.svg#icon-person"/></svg>
+  Admin preview — viewing as <span id="previewName">this student</span>
+  <a id="exitPreviewLink">Exit preview</a>
+</div>
+
+<div class="topbar">
+  <div class="brand">
+    <svg class="mascot" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="55" r="34" fill="#FFD9C7"/>
+      <ellipse cx="50" cy="64" rx="16" ry="13" fill="#FFF6EE"/>
+      <circle cx="41" cy="52" r="4" fill="#25393A"/>
+      <circle cx="59" cy="52" r="4" fill="#25393A"/>
+      <path d="M50 18 Q44 8 50 4 Q56 8 50 18 Z" fill="#3FB3A2"/>
+    </svg>
+    <span class="brand-name">Swelli for Education</span>
+  </div>
+  <nav>
+    <a href="home.html" class="active">Home</a>
+    <a href="checkin.html">Check In</a>
+  </nav>
+  <span class="avatar-pill" id="avatarPill"><span class="dot" id="avatarDot"></span><span id="pillName">Friend</span></span>
+</div>
+
+<div class="page">
+
+  <div class="hero">
+    <div>
+      <h1 class="display" id="greeting">Hi there!</h1>
+      <p>Here's how your garden is growing.</p>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-chip"><svg class="icon icon-md"><use href="icons.svg#icon-flame"/></svg><div class="num" id="statStreak">0</div><div class="lbl">Day streak</div></div>
+    <div class="stat-chip"><svg class="icon icon-md"><use href="icons.svg#icon-leaf"/></svg><div class="num" id="statTotal">0</div><div class="lbl">Total entries</div></div>
+    <div class="stat-chip"><svg class="icon icon-md"><use href="icons.svg#icon-blossom"/></svg><div class="num" id="statWeek">0</div><div class="lbl">This week</div></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-bottom:4px; display:flex; align-items:center; gap:8px;"><svg class="icon" style="color:var(--mint-deep);"><use href="icons.svg#icon-blossom"/></svg>Your Garden</h2>
+    <p style="color:var(--ink-soft); font-weight:600; margin:0 0 14px; font-size:14px;">Every check-in plants something new. Keep your streak alive to help it grow!</p>
+    <div class="garden-bed" id="gardenBed"></div>
+  </div>
+
+  <div class="checkin-banner">
+    <div>
+      <h2>How are you feeling today?</h2>
+      <p>Takes less than a minute — and helps your garden grow.</p>
+    </div>
+    <a class="btn btn-primary" href="checkin.html">Check in now →</a>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h2 style="font-size:18px; margin-bottom:6px; display:flex; align-items:center; gap:8px;"><svg class="icon icon-sm" style="color:var(--mint-deep);"><use href="icons.svg#icon-leaf"/></svg>Recent entries</h2>
+      <div class="entries-list" id="entriesList"></div>
+      <p class="empty-note" id="emptyNote" style="display:none;">No entries yet — check in today to plant your first sprout!</p>
+    </div>
+
+    <div class="card mint">
+      <div class="leaf-rule"><svg class="icon icon-sm" style="color:var(--mint-deep);"><use href="icons.svg#icon-leaf"/></svg> Quote of the week <svg class="icon icon-sm" style="color:var(--mint-deep);"><use href="icons.svg#icon-leaf"/></svg></div>
+      <p class="quote-text">"It's okay to not be okay. It's brave to talk about it."</p>
+      <p class="quote-author">— Ms. Alvarez, School Counselor</p>
+    </div>
+  </div>
+
+  <div class="card unlock-note" style="background:var(--mint-paler); box-shadow:none;">
+    <svg class="icon icon-sm"><use href="icons.svg#icon-pencil"/></svg>
+    <svg class="icon icon-sm"><use href="icons.svg#icon-palette"/></svg>
+    <svg class="icon icon-sm"><use href="icons.svg#icon-gamepad"/></svg>
+    <svg class="icon icon-sm"><use href="icons.svg#icon-clover"/></svg>
+    <p style="margin:0; font-weight:700; color:var(--mint-deep); font-size:14px;">Writing, drawing, games, and mapping unlock right after you check in today.</p>
+  </div>
+
+</div>
+
+<script src="data.js"></script>
+<script>
+  const session = Swelli.requireSession();
+  if(session){
+    document.getElementById('greeting').textContent = `Hi, ${session.name}!`;
+    document.getElementById('pillName').textContent = session.name;
+    document.getElementById('avatarDot').innerHTML = Swelli.icon(Swelli.BUDDY_ICONS[session.buddy] || 'buddy-fox', 'icon icon-sm');
+
+    if(session.isPreview){
+      document.getElementById('previewBanner').style.display = 'flex';
+      document.getElementById('previewName').textContent = session.name;
+      document.getElementById('exitPreviewLink').addEventListener('click', ()=>{
+        Swelli.endPreview();
+        window.location.href = 'admin-dashboard.html?role=lower';
+      });
+    }
+
+    const entries = Swelli.getEntries();
+    const stats = Swelli.computeStats(entries);
+    document.getElementById('statStreak').textContent = stats.streak;
+    document.getElementById('statTotal').textContent = stats.total;
+    document.getElementById('statWeek').textContent = stats.blossoms;
+
+    // Garden: one growth icon per streak day, most-grown stage last.
+    const bed = document.getElementById('gardenBed');
+    if(stats.streak === 0){
+      bed.innerHTML = '<p style="margin:0; color:var(--mint-deep); font-weight:700; font-size:14px;">No sprouts yet — check in today to plant the first one!</p>';
+    } else {
+      for(let i=0;i<stats.streak;i++){
+        const span = document.createElement('span');
+        span.className = 'sprout';
+        span.style.animationDelay = (i*0.05)+'s';
+        span.innerHTML = Swelli.icon(Swelli.GROWTH_STAGES[i % Swelli.GROWTH_STAGES.length], 'icon icon-lg');
+        bed.appendChild(span);
+      }
+    }
+
+    // Recent entries (most recent first)
+    const list = document.getElementById('entriesList');
+    const recent = entries.slice(-5).reverse();
+    if(!recent.length){
+      document.getElementById('emptyNote').style.display = 'block';
+    } else {
+      recent.forEach(e=>{
+        const row = document.createElement('div');
+        row.className = 'entry-row';
+        const activityLabel = { writing:'Wrote it out', drawing:'Drew it out', games:'Played it out', mapping:'Mapped it out' }[e.activity];
+        row.innerHTML = `
+          <svg class="icon icon-mood"><use href="icons.svg#${Swelli.MOOD_ICONS[e.mood] || 'mood-happy'}"/></svg>
+          <div>
+            <div class="what">${Swelli.MOOD_LABELS[e.mood] || 'Checked in'}</div>
+            <div class="meta">${Swelli.relativeDay(e.ts)}${activityLabel ? ' · ' + activityLabel : ''}</div>
+          </div>`;
+        list.appendChild(row);
+      });
+    }
+  }
+</script>
+</body>
+</html>

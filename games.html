@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swelli — SEL Games</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .game-picker{ display:grid; grid-template-columns: repeat(3,1fr); gap:16px; margin-bottom: 26px; }
+  .game-tab{
+    background:#fff; border-radius: var(--radius-lg); padding:20px; text-align:center;
+    box-shadow: var(--shadow-card); border:3px solid transparent;
+  }
+  .game-tab .icon{ width:32px; height:32px; color: var(--mint-deep); margin: 0 auto 8px; }
+  .game-tab h3{ font-size:16px; margin-bottom:4px; }
+  .game-tab p{ margin:0; font-size:13px; color: var(--ink-soft); }
+  .game-tab.active{ border-color: var(--mint); }
+  .game-panel{ display:none; }
+  .game-panel.active{ display:block; }
+
+  /* Breathing Buddy */
+  .breathe-stage{ display:flex; flex-direction:column; align-items:center; gap:18px; padding: 30px 0; }
+  .breathe-circle{
+    width:160px; height:160px; border-radius:50%; background: radial-gradient(circle at 35% 30%, #6FD7C4, var(--mint-deep));
+    display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Baloo 2'; font-weight:800; font-size:18px;
+    transition: transform 3.6s ease-in-out; transform: scale(1);
+    box-shadow: 0 18px 40px -14px rgba(47,156,141,0.5);
+  }
+  .breathe-circle.in{ transform: scale(1.35); }
+  .breathe-count{ font-weight:800; color: var(--ink-soft); }
+
+  /* Feelings Match */
+  .match-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:10px; max-width:460px; margin: 0 auto; }
+  .match-card{
+    aspect-ratio:1; border-radius: var(--radius-sm); background: var(--mint); display:flex; align-items:center; justify-content:center;
+    color:#fff; user-select:none; padding:8px;
+  }
+  .match-card .icon{ width:60%; height:60%; }
+  .match-card .qmark{ font-family:'Baloo 2'; font-size:26px; }
+  .match-card.flipped{ background:#fff; border:2px solid var(--mint-pale); color: var(--ink); }
+  .match-card.matched{ background: var(--gold); }
+  .match-meta{ text-align:center; margin-top:14px; font-weight:800; color: var(--ink-soft); }
+
+  /* Calm Counter */
+  .calm-stage{ text-align:center; max-width: 460px; margin: 0 auto; }
+  .calm-step-num{ font-family:'Baloo 2'; font-size: 54px; color: var(--mint-deep); font-weight:800; }
+  .calm-prompt{ font-size: 18px; font-weight:700; margin: 8px 0 22px; }
+  .calm-done{ display:none; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back" onclick="location.href='unwind.html'" aria-label="Back">←</button>
+  <div class="brand"><span class="brand-name">Swelli for Education</span></div>
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="checkin.html">Check In</a>
+  </nav>
+</div>
+
+<div class="page">
+  <h1 class="display" style="margin-bottom:16px; display:flex; align-items:center; gap:10px;"><svg class="icon icon-md" style="color:var(--coral);"><use href="icons.svg#icon-gamepad"/></svg>SEL Games</h1>
+
+  <div class="game-picker">
+    <button class="game-tab active" data-game="breathe"><svg class="icon"><use href="icons.svg#icon-breath"/></svg><h3>Breathing Buddy</h3><p>Calm your body with slow breaths</p></button>
+    <button class="game-tab" data-game="match"><svg class="icon"><use href="icons.svg#icon-cards"/></svg><h3>Feelings Match</h3><p>Match pairs of feeling faces</p></button>
+    <button class="game-tab" data-game="calm"><svg class="icon"><use href="icons.svg#icon-hand"/></svg><h3>Calm Counter</h3><p>5-4-3-2-1 grounding exercise</p></button>
+  </div>
+
+  <div class="card">
+
+    <div class="game-panel active" id="panel-breathe">
+      <div class="breathe-stage">
+        <div class="breathe-circle" id="breatheCircle">Breathe</div>
+        <div class="breathe-count" id="breatheCycles">0 breaths completed</div>
+        <button class="btn btn-primary" id="breatheBtn">Start</button>
+      </div>
+    </div>
+
+    <div class="game-panel" id="panel-match">
+      <div class="match-grid" id="matchGrid"></div>
+      <div class="match-meta"><span id="matchMoves">0 moves</span> · <span id="matchStatus">Find every pair!</span></div>
+      <div style="text-align:center; margin-top:14px;"><button class="btn btn-secondary" id="matchReset">Shuffle again</button></div>
+    </div>
+
+    <div class="game-panel" id="panel-calm">
+      <div class="calm-stage" id="calmStage">
+        <div class="calm-step-num" id="calmNum">5</div>
+        <p class="calm-prompt" id="calmPrompt">Name 5 things you can see right now.</p>
+        <button class="btn btn-primary" id="calmNext">Got it →</button>
+      </div>
+      <div class="calm-done" id="calmDone">
+        <p style="font-size:18px; font-weight:800; color: var(--mint-deep);">Nice work — you're grounded and present.</p>
+        <button class="btn btn-secondary" id="calmRestart">Do it again</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+  Swelli.requireSession();
+
+  // ---- Tab switching ----
+  document.querySelectorAll('.game-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.game-tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.game-panel').forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('panel-'+tab.dataset.game).classList.add('active');
+    });
+  });
+
+  // ---- Breathing Buddy ----
+  const circle = document.getElementById('breatheCircle');
+  const breatheBtn = document.getElementById('breatheBtn');
+  const cyclesEl = document.getElementById('breatheCycles');
+  let breatheTimer = null, cycles = 0, running = false;
+  function breatheCycle(){
+    circle.classList.add('in');
+    circle.textContent = 'Breathe in…';
+    breatheTimer = setTimeout(()=>{
+      circle.textContent = 'Hold…';
+      breatheTimer = setTimeout(()=>{
+        circle.classList.remove('in');
+        circle.textContent = 'Breathe out…';
+        breatheTimer = setTimeout(()=>{
+          cycles++;
+          cyclesEl.textContent = `${cycles} breath${cycles===1?'':'es'} completed`;
+          if(running) breatheCycle();
+        }, 3600);
+      }, 1500);
+    }, 3600);
+  }
+  breatheBtn.addEventListener('click', ()=>{
+    running = !running;
+    breatheBtn.textContent = running ? 'Stop' : 'Start';
+    if(running){ breatheCycle(); }
+    else { clearTimeout(breatheTimer); circle.classList.remove('in'); circle.textContent = 'Breathe'; }
+  });
+
+  // ---- Feelings Match (uses the shared mood-icon set) ----
+  const feelingIcons = Object.values(Swelli.MOOD_ICONS); // 6 distinct icons
+  const matchGrid = document.getElementById('matchGrid');
+  const movesEl = document.getElementById('matchMoves');
+  const statusEl = document.getElementById('matchStatus');
+  let deck=[], flipped=[], matchedCount=0, moves=0, lock=false;
+
+  function buildMatch(){
+    deck = [...feelingIcons, ...feelingIcons].sort(()=>Math.random()-0.5);
+    flipped=[]; matchedCount=0; moves=0; lock=false;
+    movesEl.textContent = '0 moves';
+    statusEl.textContent = 'Find every pair!';
+    matchGrid.innerHTML='';
+    deck.forEach((iconId, i)=>{
+      const c = document.createElement('button');
+      c.className = 'match-card';
+      c.dataset.index = i;
+      c.dataset.icon = iconId;
+      c.innerHTML = '<span class="qmark">?</span>';
+      c.addEventListener('click', ()=> flipCard(c));
+      matchGrid.appendChild(c);
+    });
+  }
+  function flipCard(c){
+    if(lock || c.classList.contains('flipped') || c.classList.contains('matched')) return;
+    c.classList.add('flipped');
+    c.innerHTML = `<svg class="icon"><use href="icons.svg#${c.dataset.icon}"/></svg>`;
+    flipped.push(c);
+    if(flipped.length === 2){
+      moves++;
+      movesEl.textContent = `${moves} move${moves===1?'':'s'}`;
+      lock = true;
+      const [a,b] = flipped;
+      if(a.dataset.icon === b.dataset.icon){
+        a.classList.add('matched'); b.classList.add('matched');
+        matchedCount += 2;
+        flipped = []; lock = false;
+        if(matchedCount === deck.length){
+          statusEl.textContent = 'You matched them all!';
+          Swelli.updateLastEntry({ activityDetail: 'Matched all the feelings pairs' });
+        }
+      } else {
+        setTimeout(()=>{
+          a.classList.remove('flipped'); a.innerHTML = '<span class="qmark">?</span>';
+          b.classList.remove('flipped'); b.innerHTML = '<span class="qmark">?</span>';
+          flipped = []; lock = false;
+        }, 700);
+      }
+    }
+  }
+  document.getElementById('matchReset').addEventListener('click', buildMatch);
+  buildMatch();
+
+  // ---- Calm Counter (5-4-3-2-1 grounding) ----
+  const calmSteps = [
+    { n:5, text:'Name 5 things you can see right now.' },
+    { n:4, text:'Name 4 things you can touch nearby.' },
+    { n:3, text:'Name 3 things you can hear.' },
+    { n:2, text:'Name 2 things you can smell.' },
+    { n:1, text:'Name 1 thing you can taste, or are grateful for.' },
+  ];
+  let calmIdx = 0;
+  const calmNum = document.getElementById('calmNum');
+  const calmPrompt = document.getElementById('calmPrompt');
+  const calmStage = document.getElementById('calmStage');
+  const calmDone = document.getElementById('calmDone');
+  function renderCalm(){
+    calmNum.textContent = calmSteps[calmIdx].n;
+    calmPrompt.textContent = calmSteps[calmIdx].text;
+  }
+  document.getElementById('calmNext').addEventListener('click', ()=>{
+    calmIdx++;
+    if(calmIdx >= calmSteps.length){
+      calmStage.style.display='none';
+      calmDone.style.display='block';
+      Swelli.updateLastEntry({ activityDetail: 'Completed the 5-4-3-2-1 grounding exercise' });
+    } else { renderCalm(); }
+  });
+  document.getElementById('calmRestart').addEventListener('click', ()=>{
+    calmIdx = 0; renderCalm();
+    calmStage.style.display='block'; calmDone.style.display='none';
+  });
+  renderCalm();
+</script>
+</body>
+</html>

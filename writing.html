@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swelli — Writing Pad</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .prompt-card{
+    background: var(--gold); color: #4A3300; border-radius: var(--radius-lg);
+    padding: 18px 22px; display:flex; align-items:center; gap:14px; margin-bottom: 20px;
+  }
+  .prompt-card .icon{ color:#4A3300; }
+  .prompt-card p{ margin:0; font-weight:800; font-size: 15px; }
+  .prompt-card button{
+    margin-left:auto; background: rgba(255,255,255,0.5); border:none; border-radius:999px;
+    padding: 8px 14px; font-weight:800; font-size:13px; color:#4A3300; white-space:nowrap;
+  }
+  .notebook{
+    border-radius: var(--radius-lg); background:
+      repeating-linear-gradient(to bottom, #fff 0px, #fff 35px, #EAF4F1 36px);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-card);
+    position: relative;
+    padding: 22px 22px 22px 54px;
+  }
+  .notebook::before{
+    content:""; position:absolute; left: 38px; top:0; bottom:0; width:2px; background: #FFC9B8;
+  }
+  #padText{
+    width:100%; min-height: 300px; border:none; background:transparent; resize: vertical;
+    font-family: 'Nunito'; font-size: 18px; line-height: 36px; font-weight:600; color: var(--ink);
+  }
+  #padText:focus{ outline:none; }
+  .pad-footer{ display:flex; align-items:center; justify-content:space-between; margin-top: 16px; flex-wrap:wrap; gap:10px; }
+  .word-count{ font-size: 13px; font-weight:700; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back" onclick="location.href='unwind.html'" aria-label="Back">←</button>
+  <div class="brand"><span class="brand-name">Swelli for Education</span></div>
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="checkin.html">Check In</a>
+  </nav>
+</div>
+
+<div class="page narrow">
+  <h1 class="display" style="margin-bottom:16px; display:flex; align-items:center; gap:10px;"><svg class="icon icon-md" style="color:var(--coral);"><use href="icons.svg#icon-pencil"/></svg>Writing Pad</h1>
+
+  <div class="prompt-card">
+    <svg class="icon icon-md"><use href="icons.svg#icon-thought"/></svg>
+    <p id="promptText">If today were a weather forecast, what would it say?</p>
+    <button id="newPrompt">New prompt</button>
+  </div>
+
+  <div class="notebook">
+    <textarea id="padText" placeholder="Start writing here…"></textarea>
+  </div>
+
+  <div class="pad-footer">
+    <span class="word-count" id="wordCount">0 words</span>
+    <button class="btn btn-primary" id="saveBtn">Save entry</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Nice work! Your entry was saved.</div>
+
+<script src="data.js"></script>
+<script>
+  Swelli.requireSession();
+
+  const prompts = [
+    "If today were a weather forecast, what would it say?",
+    "What's one thing that made you smile this week?",
+    "If your feeling today was an animal, what would it be and why?",
+    "Write about a time you felt brave.",
+    "What's something you wish a grown-up understood about you?",
+    "Describe your perfect calm-down spot.",
+  ];
+  const promptEl = document.getElementById('promptText');
+  document.getElementById('newPrompt').addEventListener('click', ()=>{
+    promptEl.textContent = prompts[Math.floor(Math.random()*prompts.length)];
+  });
+
+  const pad = document.getElementById('padText');
+  const wc = document.getElementById('wordCount');
+  let wordCount = 0;
+  pad.addEventListener('input', ()=>{
+    wordCount = pad.value.trim().split(/\s+/).filter(Boolean).length;
+    wc.textContent = `${wordCount} word${wordCount===1?'':'s'}`;
+  });
+
+  const toast = document.getElementById('toast');
+  document.getElementById('saveBtn').addEventListener('click', ()=>{
+    const text = pad.value.trim();
+    Swelli.updateLastEntry({
+      activity: 'writing',
+      activityDetail: text.slice(0, 280),
+      wordCount,
+    });
+
+    const hits = Swelli.checkAndFlag(text, 'Writing pad');
+    if(hits.length){
+      Swelli.updateLastEntry({ flagged: true, flagCategories: hits.map(h => h.category) });
+      Swelli.showSafetyOverlay(hits);
+    } else {
+      toast.classList.add('show');
+      setTimeout(()=> toast.classList.remove('show'), 2200);
+    }
+  });
+</script>
+</body>
+</html>

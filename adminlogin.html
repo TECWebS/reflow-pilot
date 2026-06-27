@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swelli for Education — Staff Sign In</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(circle at 80% 10%, var(--mint-paler), var(--cream) 55%);
+    padding: 28px 16px;
+  }
+  .login-wrap{ max-width: 400px; width:100%; text-align:center; }
+  .mascot-big{ width:72px; height:72px; margin: 0 auto 10px; }
+  .login-wrap .display{ font-size: 26px; font-weight:800; margin-bottom: 4px; }
+  .login-wrap .sub{ color: var(--ink-soft); font-weight:600; margin-bottom: 26px; }
+  .card.login-card{ text-align:left; }
+  .error-msg{ display:none; background:#FDE7E5; color:#B23B2E; font-weight:700; font-size:13px; padding:10px 14px; border-radius: var(--radius-sm); margin-bottom:16px; }
+  .student-link{ margin-top: 22px; font-size: 14px; font-weight:700; color: var(--ink-soft); }
+  .student-link a{ color: var(--mint-deep); text-decoration: underline; }
+  .demo-box{ margin-top: 18px; text-align:left; }
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+  <svg class="mascot-big" viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="55" r="34" fill="#FFD9C7"/>
+    <ellipse cx="50" cy="64" rx="16" ry="13" fill="#FFF6EE"/>
+    <circle cx="41" cy="52" r="4.5" fill="#25393A"/>
+    <circle cx="59" cy="52" r="4.5" fill="#25393A"/>
+    <path d="M50 18 Q44 8 50 4 Q56 8 50 18 Z" fill="#3FB3A2"/>
+  </svg>
+  <h1 class="display">Staff Sign In</h1>
+  <p class="sub">Counselors, principals &amp; IT — manage Swelli for your school.</p>
+
+  <form class="card login-card" id="adminLoginForm">
+    <div class="error-msg" id="errorMsg">That email or password doesn't match our records.</div>
+
+    <div class="field">
+      <label for="email">Work email</label>
+      <input id="email" type="email" placeholder="you@yourschool.edu" required>
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="••••••••" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+  </form>
+
+  <div class="card demo-box">
+    Trying this out? Use the demo account:<br>
+    <code>admin@swelli.app</code> / <code>admin123</code>
+  </div>
+
+  <p class="student-link"><a href="index.html">← Student sign-in</a></p>
+</div>
+
+<script>
+  // Demo-only credential check. In production this would authenticate
+  // against your school roster system rather than a hardcoded value.
+  const DEMO_EMAIL = 'admin@swelli.app';
+  const DEMO_PASSWORD = 'admin123';
+
+  document.getElementById('adminLoginForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const password = document.getElementById('password').value;
+    if(email === DEMO_EMAIL && password === DEMO_PASSWORD){
+      window.location.href = 'admin-dashboard.html';
+    } else {
+      document.getElementById('errorMsg').style.display = 'block';
+    }
+  });
+</script>
+</body>
+</html>

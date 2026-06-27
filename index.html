@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swelli — Sign In</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body{
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(circle at 20% 10%, var(--mint-paler), var(--cream) 55%);
+    padding: 28px 16px;
+  }
+  .login-wrap{ max-width: 420px; width:100%; text-align:center; }
+  .mascot-big{ width:96px; height:96px; margin: 0 auto 8px; }
+  .login-wrap .display{ font-size: 30px; font-weight:800; margin-bottom: 4px; }
+  .login-wrap .sub{ color: var(--ink-soft); font-weight:600; margin-bottom: 26px; }
+  .card.login-card{ text-align:left; }
+  .buddy-row{ display:flex; gap:10px; justify-content:space-between; margin-bottom: 6px; }
+  .buddy-btn{
+    flex:1; background: var(--cream); border:3px solid var(--line); border-radius: var(--radius-md);
+    padding: 12px 0; display:flex; align-items:center; justify-content:center;
+    transition: border-color .15s, transform .1s;
+  }
+  .buddy-btn .icon{ width:34px; height:34px; }
+  .buddy-btn:hover{ border-color: var(--mint); }
+  .buddy-btn.selected{ border-color: var(--coral); background:#FFF1EC; transform: translateY(-2px); }
+  .staff-link{ margin-top: 22px; font-size: 14px; font-weight:700; color: var(--ink-soft); }
+  .staff-link a{ color: var(--mint-deep); text-decoration: underline; }
+  .or-row{ display:flex; align-items:center; gap:10px; margin: 18px 0; color: var(--ink-soft); font-weight:700; font-size:13px; }
+  .or-row::before, .or-row::after{ content:""; flex:1; height:1px; background: var(--line); }
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+  <svg class="mascot-big" viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="55" r="34" fill="#FF8A65"/>
+    <path d="M22 36 L34 18 L40 40 Z" fill="#FF8A65"/>
+    <path d="M78 36 L66 18 L60 40 Z" fill="#FF8A65"/>
+    <path d="M24 38 L33 23 L37 41 Z" fill="#FFD9C7"/>
+    <path d="M76 38 L67 23 L63 41 Z" fill="#FFD9C7"/>
+    <ellipse cx="50" cy="64" rx="16" ry="13" fill="#FFF6EE"/>
+    <circle cx="41" cy="52" r="4.5" fill="#25393A"/>
+    <circle cx="59" cy="52" r="4.5" fill="#25393A"/>
+    <path d="M50 60 L46 66 L54 66 Z" fill="#F26B45"/>
+    <path d="M44 70 Q50 75 56 70" stroke="#25393A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M50 18 Q44 8 50 4 Q56 8 50 18 Z" fill="#3FB3A2"/>
+  </svg>
+  <h1 class="display">Welcome to Swelli</h1>
+  <p class="sub" style="display:flex; align-items:center; justify-content:center; gap:6px;">Check in, grow your garden, feel good <svg class="icon icon-sm" style="color:var(--mint-deep);"><use href="icons.svg#growth-sprout"/></svg></p>
+
+  <form class="card login-card" id="loginForm">
+    <div class="field">
+      <label for="school">My school</label>
+      <select id="school" required>
+        <option value="">Choose your school…</option>
+        <option>Riverbend Elementary</option>
+        <option>Maple Creek Elementary</option>
+        <option>Sunridge Elementary</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="firstName">My first name</label>
+      <input id="firstName" type="text" placeholder="e.g. Maya" required>
+    </div>
+
+    <div class="field">
+      <label for="classCode">My class code</label>
+      <input id="classCode" type="text" placeholder="Ask your teacher" required>
+    </div>
+
+    <div class="field">
+      <label>Pick a garden buddy</label>
+      <div class="buddy-row" id="buddyRow">
+        <button type="button" class="buddy-btn selected" data-buddy="fox"><svg class="icon"><use href="icons.svg#buddy-fox"/></svg></button>
+        <button type="button" class="buddy-btn" data-buddy="owl"><svg class="icon"><use href="icons.svg#buddy-owl"/></svg></button>
+        <button type="button" class="buddy-btn" data-buddy="turtle"><svg class="icon"><use href="icons.svg#buddy-turtle"/></svg></button>
+        <button type="button" class="buddy-btn" data-buddy="bee"><svg class="icon"><use href="icons.svg#buddy-bee"/></svg></button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Let's grow! <svg class="icon icon-sm"><use href="icons.svg#growth-sprout"/></svg></button>
+  </form>
+
+  <div class="card demo-box" style="margin-top:18px; text-align:left;">
+    Trying this out? Use the sample lower school account:<br>
+    School <code>Riverbend Elementary</code> · Name <code>Maya</code> · Class code <code>DEMO123</code>
+  </div>
+
+  <div class="or-row">staff &amp; counselors</div>
+  <p class="staff-link"><a href="adminlogin.html">Sign in to the educator dashboard →</a></p>
+</div>
+
+<script src="data.js"></script>
+<script>
+  document.querySelectorAll('.buddy-btn').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('.buddy-btn').forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected');
+    });
+  });
+
+  document.getElementById('loginForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const name = document.getElementById('firstName').value.trim() || 'Friend';
+    const school = document.getElementById('school').value;
+    const classCode = document.getElementById('classCode').value.trim();
+    const buddy = document.querySelector('.buddy-btn.selected').dataset.buddy;
+
+    if(!Swelli.storageAvailable()){
+      alert("This browser/tablet has storage disabled, so check-ins can't be saved. Try a different browser or check your tablet's privacy settings.");
+      return;
+    }
+    // Creates a real local session: entries from here on are saved on
+    // this device and power the home dashboard (streaks, garden, etc).
+    Swelli.createSession({ name, buddy, school, classCode });
+    window.location.href = 'home.html';
+  });
+</script>
+</body>
+</html>

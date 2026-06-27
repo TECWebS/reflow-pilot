@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swelli for Education — Admin Dashboard</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .roster-head h1{ font-size: 24px; }
+  .roster-head .count{ color: var(--ink-soft); font-weight:700; font-size:14px; margin-top:2px; }
+  .upper-note{
+    background: var(--mint-paler); color: var(--mint-deep); font-weight:700; font-size:13px;
+    padding: 12px 16px; border-radius: var(--radius-md); margin-bottom:18px;
+  }
+  .view-btn{ font-size:13px; padding: 9px 16px; }
+  .view-btn[disabled]{ background: var(--line); color: var(--ink-soft); }
+  .empty-state{ text-align:center; padding: 40px 0; color: var(--ink-soft); font-weight:700; }
+  .student-card .buddy .icon{ width:28px; height:28px; }
+  .student-card .mood-streak .icon{ width:20px; height:20px; color: var(--coral); }
+  .student-card .new-flag-badge{
+    background:#FDEEEC; color:#B23B2E; font-weight:800; font-size:11px; padding:4px 9px;
+    border-radius:999px; margin-left:6px; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;
+  }
+  .student-card .new-flag-badge .icon{ width:12px; height:12px; }
+</style>
+</head>
+<body>
+
+<div class="topbar admin">
+  <div class="brand">
+    <svg class="mascot" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="55" r="34" fill="#FFD9C7"/>
+      <ellipse cx="50" cy="64" rx="16" ry="13" fill="#FFF6EE"/>
+      <circle cx="41" cy="52" r="4" fill="#25393A"/>
+      <circle cx="59" cy="52" r="4" fill="#25393A"/>
+      <path d="M50 18 Q44 8 50 4 Q56 8 50 18 Z" fill="#3FB3A2"/>
+    </svg>
+    <span class="brand-name">Swelli for Education</span>
+  </div>
+
+  <div class="toggle-wrap">
+    <div class="role-toggle">
+      <span class="role-label active" id="lowerLabel">Lower School</span>
+      <button class="role-switch" id="roleSwitch" role="switch" aria-checked="false" aria-label="Toggle between Lower School and Upper School"><span class="knob"></span></button>
+      <span class="role-label" id="upperLabel">Upper School</span>
+    </div>
+  </div>
+
+  <div class="admin-account">
+    <button class="admin-avatar-btn" id="adminAvatarBtn" aria-label="Account menu"><svg class="icon icon-sm" style="color:#fff;"><use href="icons.svg#icon-person"/></svg></button>
+    <div class="admin-menu" id="adminMenu">
+      <div class="who">Signed in as<br><strong>admin@swelli.app</strong></div>
+      <a href="adminlogin.html">Log out</a>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <p class="flag-scope-note" style="padding:0 0 14px; display:flex; align-items:flex-start; gap:8px;"><svg class="icon icon-sm" style="color:#B23B2E; flex-shrink:0; margin-top:1px;"><use href="icons.svg#icon-warning"/></svg><span>Flagged check-ins below appear instantly when this dashboard is open on the same device as the check-in. For real-time alerts across separate student tablets, this needs to connect to a backend (see chat for details).</span></p>
+
+  <div class="roster-head">
+    <div>
+      <h1 class="display" id="rosterTitle">Lower School Students</h1>
+      <p class="count" id="rosterCount">3 students · K–6</p>
+    </div>
+    <input type="text" class="roster-search" id="rosterSearch" placeholder="Search by name…">
+  </div>
+
+  <div class="upper-note" id="upperNote" style="display:none;">
+    The Upper School student experience hasn't been built yet — rosters are shown here for reference, and "View as" will be enabled once that interface is ready.
+  </div>
+
+  <div class="student-list" id="studentList"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">No students match that search.</div>
+
+</div>
+
+<script src="data.js"></script>
+<script>
+  const lowerStudents = [
+    { name:'Maya', grade:'Grade 2', buddy:'fox', mood:'happy', streak:12, hasPlan:true, flag:null },
+    { name:'Aiden', grade:'Grade 1', buddy:'bee', mood:'tired', streak:7, hasPlan:false, flag:null },
+    { name:'Liam', grade:'Grade 4', buddy:'turtle', mood:'anxious', streak:3, hasPlan:false, flag:null },
+    { name:'Sofia', grade:'Grade 5', buddy:'owl', mood:'sad', streak:0, hasPlan:true, flag:'No check-in in 4 days' },
+  ];
+  const upperStudents = [
+    { name:'Jordan', grade:'Grade 9' },
+    { name:'Sophia', grade:'Grade 11' },
+    { name:'Marcus', grade:'Grade 7' },
+  ];
+
+  let isUpper = false;
+
+  function render(){
+    const search = document.getElementById('rosterSearch').value.trim().toLowerCase();
+    const list = document.getElementById('studentList');
+    const title = document.getElementById('rosterTitle');
+    const count = document.getElementById('rosterCount');
+    const upperNote = document.getElementById('upperNote');
+    list.innerHTML = '';
+
+    const data = (isUpper ? upperStudents : lowerStudents).filter(s => s.name.toLowerCase().includes(search));
+    const flaggedNames = new Set(Swelli.getUnacknowledgedFlags().map(f => f.studentName));
+
+    title.textContent = isUpper ? 'Upper School Students' : 'Lower School Students';
+    count.textContent = isUpper ? `${data.length} of ${upperStudents.length} students · Grades 7–12` : `${data.length} of ${lowerStudents.length} students · K–6`;
+    upperNote.style.display = isUpper ? 'block' : 'none';
+    document.getElementById('emptyState').style.display = data.length ? 'none' : 'block';
+
+    data.forEach((s, idx)=>{
+      const card = document.createElement('div');
+      card.className = 'student-card' + (isUpper ? ' unavailable' : '');
+
+      const buddyHtml = isUpper
+        ? `<div class="buddy"><svg class="icon"><use href="icons.svg#icon-cap"/></svg></div>`
+        : `<div class="buddy"><svg class="icon"><use href="icons.svg#${Swelli.BUDDY_ICONS[s.buddy]}"/></svg></div>`;
+
+      const planHtml = (!isUpper && s.hasPlan) ? `<span class="plan-badge"><svg class="icon"><use href="icons.svg#icon-flag"/></svg>Has a plan</span>` : '';
+      const flagHtml = (!isUpper && s.flag) ? `<span class="flag"><svg class="icon icon-sm" style="vertical-align:-2px;"><use href="icons.svg#icon-warning"/></svg> ${s.flag}</span>` : '';
+      const newFlagHtml = (!isUpper && flaggedNames.has(s.name)) ? `<span class="new-flag-badge"><svg class="icon"><use href="icons.svg#icon-warning"/></svg>New flag</span>` : '';
+
+      const moodStreakHtml = isUpper
+        ? ''
+        : `<div class="mood-streak"><svg class="icon icon-mood"><use href="icons.svg#${Swelli.MOOD_ICONS[s.mood]}"/></svg><span><svg class="icon" style="vertical-align:-3px;"><use href="icons.svg#icon-flame"/></svg> ${s.streak}d</span></div>`;
+
+      const buttonHtml = isUpper
+        ? `<button class="btn btn-secondary view-btn" disabled>Coming soon</button>`
+        : `<button class="btn btn-secondary view-btn" data-idx="${idx}">View as →</button>`;
+
+      card.innerHTML = `
+        ${buddyHtml}
+        <div class="info">
+          <div class="name">${s.name} <span style="color:var(--ink-soft); font-weight:700; font-size:13px;">· ${s.grade}</span>${planHtml}${flagHtml}${newFlagHtml}</div>
+        </div>
+        ${moodStreakHtml}
+        ${buttonHtml}
+      `;
+      list.appendChild(card);
+
+      if(!isUpper){
+        card.querySelector('.view-btn').addEventListener('click', ()=>{
+          Swelli.startPreview(s);
+          window.location.href = 'home.html';
+        });
+      }
+    });
+  }
+
+  document.getElementById('roleSwitch').addEventListener('click', ()=>{
+    isUpper = !isUpper;
+    document.getElementById('roleSwitch').classList.toggle('checked', isUpper);
+    document.getElementById('roleSwitch').setAttribute('aria-checked', String(isUpper));
+    document.getElementById('lowerLabel').classList.toggle('active', !isUpper);
+    document.getElementById('upperLabel').classList.toggle('active', isUpper);
+    render();
+  });
+
+  document.getElementById('rosterSearch').addEventListener('input', render);
+
+  document.getElementById('adminAvatarBtn').addEventListener('click', ()=>{
+    document.getElementById('adminMenu').classList.toggle('open');
+  });
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.admin-account')) document.getElementById('adminMenu').classList.remove('open');
+  });
+
+  const initialRole = new URLSearchParams(window.location.search).get('role');
+  if(initialRole === 'upper'){
+    isUpper = true;
+    document.getElementById('roleSwitch').classList.add('checked');
+    document.getElementById('roleSwitch').setAttribute('aria-checked', 'true');
+    document.getElementById('lowerLabel').classList.remove('active');
+    document.getElementById('upperLabel').classList.add('active');
+  }
+
+  render();
+
+  // ---- Flagged check-in alerts ----
+  function renderFlagBanner(){
+    const unacked = Swelli.getUnacknowledgedFlags();
+    let banner = document.getElementById('flagBanner');
+    if(unacked.length){
+      if(!banner){
+        banner = document.createElement('div');
+        banner.className = 'flag-banner';
+        banner.id = 'flagBanner';
+        document.querySelector('.roster-head').insertAdjacentElement('beforebegin', banner);
+      }
+      banner.innerHTML = `<svg class="icon"><use href="icons.svg#icon-warning"/></svg> ${unacked.length} flagged check-in${unacked.length===1?'':'s'} need review <button class="btn btn-secondary">Review now</button>`;
+      banner.querySelector('button').addEventListener('click', openFlagModal);
+    } else if(banner){
+      banner.remove();
+    }
+  }
+
+  function openFlagModal(){
+    if(document.getElementById('flagModalBackdrop')){ renderFlagItems(); return; }
+    const backdrop = document.createElement('div');
+    backdrop.className = 'flag-modal-backdrop';
+    backdrop.id = 'flagModalBackdrop';
+    backdrop.innerHTML = `
+      <div class="flag-modal">
+        <div class="flag-modal-head"><svg class="icon"><use href="icons.svg#icon-warning"/></svg> <span id="flagModalCount"></span></div>
+        <div class="flag-modal-body" id="flagModalBody"></div>
+      </div>`;
+    document.body.appendChild(backdrop);
+    backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) backdrop.remove(); });
+    renderFlagItems();
+  }
+
+  function renderFlagItems(){
+    const body = document.getElementById('flagModalBody');
+    if(!body) return;
+    const unacked = Swelli.getUnacknowledgedFlags().sort((a,b)=> b.ts - a.ts);
+    if(!unacked.length){
+      document.getElementById('flagModalBackdrop')?.remove();
+      renderFlagBanner();
+      return;
+    }
+    document.getElementById('flagModalCount').textContent = `${unacked.length} flagged check-in${unacked.length===1?'':'s'}`;
+    body.innerHTML = unacked.map(f => `
+      <div class="flag-item severity-${f.severity}">
+        <div class="flag-top">
+          <span class="flag-who">${f.studentName}</span>
+          <span class="flag-when">${Swelli.relativeDay(f.ts)}</span>
+        </div>
+        <div class="flag-cat">${f.category}</div>
+        <p class="flag-snippet">"${f.snippet}${f.snippet.length>=140?'…':''}" — ${f.source}</p>
+        <button class="btn btn-secondary ack-btn" data-id="${f.id}">Mark reviewed</button>
+      </div>`).join('');
+    body.querySelectorAll('.ack-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        Swelli.acknowledgeFlag(btn.dataset.id);
+        renderFlagItems();
+        render();
+      });
+    });
+  }
+
+  // Treat whatever's unacknowledged at load as "seen" for delta purposes,
+  // but still pop the modal once immediately if any exist.
+  let lastSeenFlagIds = new Set(Swelli.getUnacknowledgedFlags().map(f => f.id));
+  renderFlagBanner();
+  if(lastSeenFlagIds.size) openFlagModal();
+
+  // Poll for flags written on this same device — e.g. a second tab/window
+  // running the student check-in flow on this same tablet. This is the
+  // "instant pop-up" working today; true cross-tablet alerts need a backend.
+  setInterval(()=>{
+    const unacked = Swelli.getUnacknowledgedFlags();
+    const currentIds = new Set(unacked.map(f => f.id));
+    const hasNew = [...currentIds].some(id => !lastSeenFlagIds.has(id));
+    lastSeenFlagIds = currentIds;
+    renderFlagBanner();
+    if(hasNew) openFlagModal();
+    if(document.getElementById('flagModalBackdrop')) renderFlagItems();
+  }, 4000);
+</script>
+</body>
+</html>

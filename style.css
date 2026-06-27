@@ -1,0 +1,394 @@
+/* ===================================================================
+   Swelli — shared design system
+   Signature idea: "The Garden" — every check-in plants something.
+   Palette: deep mint, warm cream, coral mascot accent, sunflower gold.
+   Type: Baloo 2 (display/playful) + Nunito (body, very readable for
+   early readers).
+=================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
+
+:root{
+  --mint-deep:   #2F9C8D;
+  --mint:        #3FB3A2;
+  --mint-pale:   #DCF2EC;
+  --mint-paler:  #EFFAF7;
+  --cream:       #FFFAF1;
+  --coral:       #FF8A65;
+  --coral-deep:  #F26B45;
+  --gold:        #F4B740;
+  --gold-deep:   #E0A22A;
+  --ink:         #25393A;
+  --ink-soft:    #66807E;
+  --white:       #FFFFFF;
+  --line:        #E7E1D2;
+
+  --radius-lg: 28px;
+  --radius-md: 20px;
+  --radius-sm: 12px;
+  --shadow-card: 0 10px 30px -12px rgba(37,57,58,0.18);
+  --shadow-pop:  0 16px 36px -10px rgba(242,107,69,0.35);
+}
+
+*{ box-sizing: border-box; }
+html,body{ margin:0; padding:0; }
+
+body{
+  font-family: 'Nunito', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,h2,h3, .display{
+  font-family: 'Baloo 2', sans-serif;
+  margin: 0;
+  color: var(--ink);
+  letter-spacing: 0.2px;
+}
+
+a{ color: inherit; text-decoration: none; }
+button{ font-family: inherit; cursor: pointer; }
+
+img, svg{ display:block; max-width:100%; }
+
+/* Focus visibility (accessibility floor) */
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex]:focus-visible{
+  outline: 3px solid var(--gold-deep);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+/* ---------- Leaf divider, used as a small structural device ---------- */
+.leaf-rule{
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  color: var(--mint-deep); margin: 6px 0 18px;
+  font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+}
+.leaf-rule::before, .leaf-rule::after{
+  content:""; height:2px; width:34px; background: var(--mint-pale); border-radius:2px;
+}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 16px 22px;
+  background: linear-gradient(135deg, var(--mint) 0%, var(--mint-deep) 100%);
+  color: var(--white);
+  position: sticky; top:0; z-index: 20;
+}
+.topbar .brand{ display:flex; align-items:center; gap:12px; }
+.topbar .brand-name{ font-family:'Baloo 2'; font-weight:800; font-size: 22px; }
+.topbar .back{
+  display:flex; align-items:center; justify-content:center;
+  width:40px; height:40px; border-radius:50%;
+  background: rgba(255,255,255,0.18); color:#fff; border:none; font-size:18px;
+}
+.topbar .back:hover{ background: rgba(255,255,255,0.3); }
+.topbar nav{ display:flex; gap:8px; align-items:center; }
+.topbar nav a{
+  font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 999px;
+  color: #fff; opacity:0.85;
+}
+.topbar nav a.active, .topbar nav a:hover{ opacity:1; background: rgba(255,255,255,0.2); }
+.avatar-pill{
+  display:flex; align-items:center; gap:8px; background: rgba(255,255,255,0.18);
+  padding: 6px 12px 6px 6px; border-radius: 999px; font-weight:700; font-size:14px;
+}
+.avatar-pill .dot{
+  width:28px; height:28px; border-radius:50%; background: var(--gold);
+  display:flex; align-items:center; justify-content:center; font-size:15px;
+}
+
+/* ---------- Mascot ---------- */
+.mascot{ width:44px; height:44px; }
+
+/* ---------- Page shell ---------- */
+.page{ max-width: 980px; margin: 0 auto; padding: 28px 22px 64px; }
+.page.narrow{ max-width: 760px; }
+
+/* ---------- Cards ---------- */
+.card{
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 26px;
+}
+.card.mint{ background: var(--mint-pale); box-shadow:none; }
+.card-row{ display:grid; gap:20px; }
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border:none; border-radius: 999px; font-weight: 800; font-family:'Baloo 2';
+  font-size: 17px; padding: 14px 28px; transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn:active{ transform: translateY(1px) scale(0.99); }
+.btn-primary{ background: var(--coral); color:#fff; box-shadow: var(--shadow-pop); }
+.btn-primary:hover{ background: var(--coral-deep); }
+.btn-secondary{ background: var(--mint-pale); color: var(--mint-deep); }
+.btn-secondary:hover{ background: #cdeee6; }
+.btn-ghost{ background: transparent; color: var(--mint-deep); border: 2px solid var(--mint-pale); }
+.btn-ghost:hover{ background: var(--mint-paler); }
+.btn-block{ width:100%; }
+.btn[disabled]{ opacity:0.5; cursor:not-allowed; box-shadow:none; }
+
+/* ---------- Form fields ---------- */
+.field{ margin-bottom: 18px; text-align:left; }
+.field label{ display:block; font-weight: 800; font-size: 14px; color: var(--ink); margin-bottom: 6px; }
+.field input, .field select{
+  width:100%; padding: 14px 16px; border-radius: var(--radius-sm);
+  border: 2px solid var(--line); font-family:'Nunito'; font-size:16px; font-weight:600;
+  background: var(--cream);
+}
+.field input:focus, .field select:focus{ border-color: var(--mint); outline:none; background:#fff; }
+
+/* ---------- Mood grid ---------- */
+.mood-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:16px; margin: 18px 0; }
+.mood-btn{
+  background:#fff; border:3px solid var(--line); border-radius: var(--radius-md);
+  padding: 16px 8px; font-size: 34px; display:flex; flex-direction:column; align-items:center; gap:8px;
+}
+.mood-btn span.label{ font-family:'Nunito'; font-weight:800; font-size:13px; color: var(--ink-soft); }
+.mood-btn:hover{ border-color: var(--mint); }
+.mood-btn.selected{ border-color: var(--coral); background: #FFF1EC; box-shadow: var(--shadow-pop); }
+
+/* ---------- Garden ---------- */
+.garden-bed{
+  background: linear-gradient(180deg, var(--mint-paler), var(--mint-pale));
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  display:flex; flex-wrap:wrap; gap:6px; align-items:flex-end; min-height: 110px;
+}
+.garden-bed .sprout{ font-size: 26px; animation: pop .4s ease backwards; }
+@keyframes pop{ from{ transform: scale(0); opacity:0; } to{ transform: scale(1); opacity:1; } }
+
+/* ---------- Stat chips ---------- */
+.stat-row{ display:grid; grid-template-columns: repeat(3,1fr); gap:14px; margin: 18px 0; }
+.stat-chip{ background: var(--white); border-radius: var(--radius-md); padding: 16px; text-align:center; box-shadow: var(--shadow-card); }
+.stat-chip .num{ font-family:'Baloo 2'; font-weight:800; font-size: 30px; color: var(--mint-deep); }
+.stat-chip .lbl{ font-size: 13px; font-weight:700; color: var(--ink-soft); }
+
+/* ---------- Unwind / choice cards ---------- */
+.choice-grid{ display:grid; grid-template-columns: repeat(2,1fr); gap:18px; }
+.choice-card{
+  background:#fff; border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-card);
+  display:flex; flex-direction:column; gap:10px; border: 3px solid transparent;
+  text-align:left;
+}
+.choice-card:hover{ border-color: var(--mint); transform: translateY(-2px); }
+.choice-card .icon{ font-size: 34px; }
+.choice-card h3{ font-size: 19px; }
+.choice-card p{ margin:0; color: var(--ink-soft); font-size: 14px; line-height:1.4; }
+
+/* ---------- Toast ---------- */
+.toast{
+  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color:#fff; padding: 14px 22px; border-radius: 999px;
+  font-weight:700; box-shadow: 0 12px 24px -8px rgba(0,0,0,0.35);
+  opacity:0; transition: all .25s ease; pointer-events:none; z-index: 50;
+}
+.toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- Icon sizing (SVG sprite via icons.svg) ---------- */
+.icon{ width:22px; height:22px; flex-shrink:0; }
+.icon-sm{ width:16px; height:16px; }
+.icon-md{ width:28px; height:28px; }
+.icon-lg{ width:40px; height:40px; }
+.icon-xl{ width:56px; height:56px; }
+.icon-mood{ width:34px; height:34px; }
+
+/* ---------- Touch / tablet baseline ---------- */
+.btn, .mood-btn, .buddy-btn, .pick-card, .unwind-btn, .choice-card,
+.ql, .match-card, .game-tab, a, button, input, select, textarea{
+  -webkit-tap-highlight-color: transparent;
+}
+.btn, .topbar .back, .admin-avatar-btn, input, select, .field input{
+  touch-action: manipulation;
+}
+.btn{ min-height: 48px; }
+.field input, .field select{ min-height: 48px; }
+
+@media (min-width: 641px) and (max-width: 1024px){
+  .page{ padding: 24px 28px 56px; }
+  .mood-grid{ gap: 14px; }
+}
+
+/* ---------- Plan flag + counselor note (check-in) ---------- */
+.plan-card{
+  background: #FFF3E2; border-radius: var(--radius-lg); padding: 18px 22px; margin-top: 18px;
+  text-align:left; border: 2px solid #FBDFAF;
+}
+.plan-card .plan-head{ display:flex; align-items:center; gap:10px; font-weight:800; color:#9A6B12; margin-bottom:4px; }
+.plan-card .plan-head .icon{ color:#E0A22A; }
+.plan-card p{ margin:4px 0 12px; font-size:14px; color:#7A5A18; font-weight:600; }
+.plan-card textarea{
+  width:100%; min-height:80px; border-radius: var(--radius-sm); border:2px solid #FBDFAF;
+  padding:12px 14px; font-family:'Nunito'; font-weight:600; font-size:14px; background:#fff; resize:vertical;
+}
+.plan-card textarea:focus{ outline:none; border-color:#E0A22A; }
+.plan-toggle-row{ display:flex; align-items:center; gap:10px; }
+.plan-toggle-row label{ font-weight:700; font-size:14px; color:#7A5A18; }
+
+/* ---------- Drawing: shape toolbar ---------- */
+.tool-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:8px; }
+.tool-btn{
+  display:flex; align-items:center; justify-content:center; background: var(--cream);
+  border: 2px solid var(--line); border-radius: var(--radius-sm); padding: 10px 0; color: var(--ink);
+}
+.tool-btn.active{ border-color: var(--coral); background:#FFF1EC; color: var(--coral-deep); }
+
+/* ---------- Mapping: drag-and-drop step list ---------- */
+.drag-list{ display:flex; flex-direction:column; gap:10px; margin-top: 12px; touch-action: none; }
+.drag-item{
+  display:flex; align-items:center; gap:12px; background: var(--cream); border-radius: var(--radius-md);
+  padding: 14px 14px; border: 2px solid var(--line); user-select:none; position:relative;
+}
+.drag-item .grip{ color: var(--ink-soft); flex-shrink:0; cursor: grab; touch-action:none; }
+.drag-item .n{
+  width:26px; height:26px; border-radius:50%; background: var(--mint-deep); color:#fff; font-weight:800;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Baloo 2'; font-size:13px;
+}
+.drag-item.dragging{ opacity: 0.5; }
+.drag-item.placeholder{ border: 2px dashed var(--mint); background: var(--mint-pale); }
+
+/* ---------- Safety overlay (student-facing, shown on flagged text) ---------- */
+.safety-overlay{
+  position:fixed; inset:0; background:rgba(37,57,58,0.78); z-index:200;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.safety-card{
+  background:#fff; border-radius: var(--radius-lg); padding: 30px 26px; max-width: 460px; width:100%;
+  text-align:center; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4);
+}
+.safety-card h2{ font-size:21px; color: var(--mint-deep); margin-bottom:10px; }
+.safety-card p{ font-weight:600; color: var(--ink); font-size:15px; line-height:1.5; margin:0 0 16px; }
+.safety-resources{ display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.safety-res{
+  background: var(--mint-paler); border-radius: var(--radius-sm); padding:10px 14px; text-align:left;
+}
+.safety-res strong{ display:block; font-family:'Baloo 2'; font-size:16px; color: var(--mint-deep); }
+.safety-res span{ font-size:12px; color: var(--ink-soft); font-weight:700; }
+.safety-note{ font-size:12px; color: var(--ink-soft); font-weight:700; }
+
+/* ---------- Admin: flagged alerts modal + banner ---------- */
+.flag-modal-backdrop{
+  position:fixed; inset:0; background:rgba(37,57,58,0.6); z-index:200;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.flag-modal{
+  background:#fff; border-radius: var(--radius-lg); max-width: 540px; width:100%;
+  max-height: 80vh; overflow-y:auto; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4);
+}
+.flag-modal-head{
+  display:flex; align-items:center; gap:10px; padding: 20px 24px; border-bottom:2px solid var(--line);
+  color:#B23B2E; font-family:'Baloo 2'; font-weight:800; font-size:19px; position:sticky; top:0; background:#fff;
+}
+.flag-modal-body{ padding: 16px 24px 24px; display:flex; flex-direction:column; gap:14px; }
+.flag-item{ background:#FDEEEC; border:2px solid #FBD3CC; border-radius: var(--radius-md); padding:14px 16px; text-align:left; }
+.flag-item.severity-medium{ background: var(--mint-paler); border-color: var(--mint-pale); }
+.flag-item.severity-high{ background:#FFF3E2; border-color:#FBDFAF; }
+.flag-item .flag-top{ display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:6px; }
+.flag-item .flag-who{ font-weight:800; font-family:'Baloo 2'; }
+.flag-item .flag-when{ font-size:12px; font-weight:700; color: var(--ink-soft); }
+.flag-item .flag-cat{ font-weight:800; font-size:13px; color:#B23B2E; margin-bottom:4px; }
+.flag-item .flag-snippet{ font-size:13px; color: var(--ink); font-style:italic; margin:0 0 10px; }
+.flag-banner{
+  display:flex; align-items:center; gap:10px; background:#FDEEEC; color:#B23B2E; font-weight:800;
+  padding: 12px 18px; border-radius: var(--radius-md); margin-bottom:18px; border:2px solid #FBD3CC;
+}
+.flag-banner button{ margin-left:auto; }
+.flag-scope-note{ font-size:12px; color: var(--ink-soft); font-weight:600; padding: 0 24px 18px; }
+
+.topbar.admin{ display:grid; grid-template-columns: 1fr auto 1fr; align-items:center; }
+.topbar.admin .brand{ justify-self:start; }
+.topbar.admin .toggle-wrap{ justify-self:center; }
+.topbar.admin .admin-account{ justify-self:end; position:relative; }
+
+.role-toggle{
+  display:flex; align-items:center; gap:10px; background: rgba(255,255,255,0.95);
+  padding: 6px 16px; border-radius: 999px; box-shadow: 0 4px 14px -4px rgba(0,0,0,0.18);
+}
+.role-label{ font-weight:800; font-size:13px; color: var(--ink-soft); transition: color .15s; }
+.role-label.active{ color: var(--ink); }
+.role-switch{
+  width:44px; height:24px; border-radius:999px; background: var(--mint-pale); position:relative;
+  border:none; padding:0; flex-shrink:0;
+}
+.role-switch .knob{
+  position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%;
+  background: var(--mint-deep); transition: left .18s ease, background .18s ease;
+}
+.role-switch.checked .knob{ left:23px; background: var(--coral); }
+
+.admin-avatar-btn{
+  width:40px; height:40px; border-radius:50%; background:#E2574C; color:#fff; border:none;
+  font-size:17px; display:flex; align-items:center; justify-content:center;
+}
+.admin-menu{
+  display:none; position:absolute; right:0; top:50px; background:#fff; border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card); padding: 8px; min-width:160px; z-index:30; text-align:left;
+}
+.admin-menu.open{ display:block; }
+.admin-menu .who{ font-size:13px; font-weight:700; color: var(--ink-soft); padding: 8px 10px; border-bottom:1px solid var(--line); margin-bottom:4px; }
+.admin-menu a{ display:block; padding: 8px 10px; border-radius: 8px; font-weight:700; font-size:14px; color: var(--ink); }
+.admin-menu a:hover{ background: var(--cream); }
+
+/* ---------- Admin roster ---------- */
+.roster-head{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap; }
+.roster-search{
+  padding: 10px 16px; border-radius: 999px; border: 2px solid var(--line); background:#fff;
+  font-family:'Nunito'; font-weight:600; font-size:14px; min-width: 220px;
+}
+.roster-search:focus{ outline:none; border-color: var(--mint); }
+
+.student-list{ display:flex; flex-direction:column; gap:12px; }
+.student-card{
+  display:flex; align-items:center; gap:14px; background:#fff; border-radius: var(--radius-md);
+  padding: 14px 18px; box-shadow: var(--shadow-card); flex-wrap:wrap;
+}
+.student-card.unavailable{ opacity: 0.65; }
+.student-card .buddy{
+  width:46px; height:46px; border-radius:50%; background: var(--mint-pale);
+  display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+}
+.student-card .info{ flex:1 1 160px; min-width: 140px; }
+.student-card .name{ font-weight:800; font-family:'Baloo 2'; font-size:16px; }
+.student-card .meta{ font-size:13px; color: var(--ink-soft); font-weight:700; }
+.student-card .flag{
+  background:#FFE9D6; color:#B5530A; font-weight:800; font-size:11px; padding:4px 9px;
+  border-radius:999px; margin-left:6px; white-space:nowrap;
+}
+.student-card .mood-streak{ display:flex; gap:16px; align-items:center; font-weight:800; font-size:14px; color: var(--ink-soft); white-space:nowrap; }
+.student-card .plan-badge{
+  background: var(--mint-pale); color: var(--mint-deep); font-weight:800; font-size:11px; padding:4px 9px;
+  border-radius:999px; margin-left:6px; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;
+}
+.student-card .plan-badge .icon{ width:12px; height:12px; }
+.student-card .mood-streak .em{ font-size:20px; }
+
+/* ---------- Sample account note box ---------- */
+.demo-box{
+  background: var(--mint-pale); border-radius: var(--radius-md); padding: 16px 18px;
+  font-size: 13px; font-weight:700; color: var(--mint-deep); line-height:1.6;
+}
+.demo-box code{ background: rgba(255,255,255,0.7); padding:2px 6px; border-radius:6px; font-weight:800; }
+
+
+@media (max-width: 640px){
+  .mood-grid{ grid-template-columns: repeat(3,1fr); gap:10px; }
+  .choice-grid{ grid-template-columns: 1fr; }
+  .stat-row{ grid-template-columns: repeat(3,1fr); gap:8px; }
+  .topbar nav{ display:none; }
+  .page{ padding: 20px 14px 48px; }
+  .card{ padding: 18px; }
+  .topbar.admin{ grid-template-columns: auto 1fr; row-gap:10px; }
+  .topbar.admin .toggle-wrap{ grid-column: 1 / -1; justify-self:center; order:3; }
+  .roster-search{ width:100%; min-width:0; }
+  .student-card .mood-streak{ order:3; width:100%; justify-content:flex-start; margin-top:4px; }
+}
