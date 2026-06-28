@@ -17,7 +17,7 @@ const Swelli = (() => {
   // Paste your Apps Script Web App URL here (ends in /exec) once deployed.
   // Leave blank and everything still works locally — entries/flags just
   // won't sync to the Sheet or trigger email alerts.
-  const BACKEND_URL = '';
+  const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwAwQPaMP4z78QKEzgxcQzEiBWaR2R-_XNDL77XnBwzpg4zIk1ZAZDu_83XVygB_aUFWA/exec';
 
   function postToBackend(type, payload){
     if(!BACKEND_URL) return;
