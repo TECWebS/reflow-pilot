@@ -57,7 +57,7 @@
 
 <div class="page">
 
-  <p class="flag-scope-note" style="padding:0 0 14px; display:flex; align-items:flex-start; gap:8px;"><svg class="icon icon-sm" style="color:#B23B2E; flex-shrink:0; margin-top:1px;"><use href="icons.svg#icon-warning"/></svg><span>Flagged check-ins below appear instantly when this dashboard is open on the same device as the check-in. For real-time alerts across separate student tablets, this needs to connect to a backend (see chat for details).</span></p>
+  <p class="flag-scope-note" style="padding:0 0 14px; display:flex; align-items:flex-start; gap:8px;"><svg class="icon icon-sm" style="color:#B23B2E; flex-shrink:0; margin-top:1px;"><use href="icons.svg#icon-warning"/></svg><span>Flagged check-ins appear here from any device once the backend (Code.gs + BACKEND_URL in data.js) is set up — critical ones also email you instantly. Without it configured, alerts only work same-device.</span></p>
 
   <div class="roster-head">
     <div>
@@ -176,9 +176,17 @@
 
   render();
 
-  // ---- Flagged check-in alerts ----
-  function renderFlagBanner(){
-    const unacked = Swelli.getUnacknowledgedFlags();
+  // ---- Flagged check-in alerts (merges same-device + backend flags) ----
+  async function getCombinedUnacknowledgedFlags(){
+    const local = Swelli.getUnacknowledgedFlags();
+    const remote = await Swelli.fetchRemoteFlags();
+    const merged = new Map();
+    [...local, ...remote].forEach(f => merged.set(f.id, f));
+    return Array.from(merged.values());
+  }
+
+  async function renderFlagBanner(){
+    const unacked = await getCombinedUnacknowledgedFlags();
     let banner = document.getElementById('flagBanner');
     if(unacked.length){
       if(!banner){
@@ -194,7 +202,7 @@
     }
   }
 
-  function openFlagModal(){
+  async function openFlagModal(){
     if(document.getElementById('flagModalBackdrop')){ renderFlagItems(); return; }
     const backdrop = document.createElement('div');
     backdrop.className = 'flag-modal-backdrop';
@@ -209,10 +217,10 @@
     renderFlagItems();
   }
 
-  function renderFlagItems(){
+  async function renderFlagItems(){
     const body = document.getElementById('flagModalBody');
     if(!body) return;
-    const unacked = Swelli.getUnacknowledgedFlags().sort((a,b)=> b.ts - a.ts);
+    const unacked = (await getCombinedUnacknowledgedFlags()).sort((a,b)=> b.ts - a.ts);
     if(!unacked.length){
       document.getElementById('flagModalBackdrop')?.remove();
       renderFlagBanner();
@@ -231,7 +239,10 @@
       </div>`).join('');
     body.querySelectorAll('.ack-btn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
+        // Acknowledge in both places — whichever doesn't have this flag
+        // is a harmless no-op — so it can't resurface from the other source.
         Swelli.acknowledgeFlag(btn.dataset.id);
+        Swelli.acknowledgeRemoteFlag(btn.dataset.id);
         renderFlagItems();
         render();
       });
@@ -240,15 +251,18 @@
 
   // Treat whatever's unacknowledged at load as "seen" for delta purposes,
   // but still pop the modal once immediately if any exist.
-  let lastSeenFlagIds = new Set(Swelli.getUnacknowledgedFlags().map(f => f.id));
-  renderFlagBanner();
-  if(lastSeenFlagIds.size) openFlagModal();
+  let lastSeenFlagIds = new Set();
+  (async () => {
+    lastSeenFlagIds = new Set((await getCombinedUnacknowledgedFlags()).map(f => f.id));
+    renderFlagBanner();
+    if(lastSeenFlagIds.size) openFlagModal();
+  })();
 
-  // Poll for flags written on this same device — e.g. a second tab/window
-  // running the student check-in flow on this same tablet. This is the
-  // "instant pop-up" working today; true cross-tablet alerts need a backend.
-  setInterval(()=>{
-    const unacked = Swelli.getUnacknowledgedFlags();
+  // Poll both same-device storage and the backend Sheet for new flags.
+  // With a backend configured, this is genuinely real-time across separate
+  // tablets, not just same-device — see Code.gs / data.js BACKEND_URL.
+  setInterval(async () => {
+    const unacked = await getCombinedUnacknowledgedFlags();
     const currentIds = new Set(unacked.map(f => f.id));
     const hasNew = [...currentIds].some(id => !lastSeenFlagIds.has(id));
     lastSeenFlagIds = currentIds;
