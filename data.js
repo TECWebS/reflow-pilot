@@ -14,6 +14,35 @@ const Swelli = (() => {
   const SESSION_KEY = 'swelli:session';
   const entriesKey = (studentId) => `swelli:entries:${studentId}`;
 
+  // Paste your Apps Script Web App URL here (ends in /exec) once deployed.
+  // Leave blank and everything still works locally — entries/flags just
+  // won't sync to the Sheet or trigger email alerts.
+  const BACKEND_URL = '';
+
+  function postToBackend(type, payload){
+    if(!BACKEND_URL) return;
+    // text/plain avoids a CORS preflight against Apps Script.
+    fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ type, payload }),
+    }).catch(()=>{ /* fire-and-forget; offline shouldn't break the app */ });
+  }
+
+  async function fetchRemoteFlags(){
+    if(!BACKEND_URL) return [];
+    try {
+      const res = await fetch(`${BACKEND_URL}?action=getFlags`);
+      const data = await res.json();
+      return data.flags || [];
+    } catch(e){ return []; }
+  }
+
+  function acknowledgeRemoteFlag(id){
+    postToBackend('acknowledge', { flagId: id });
+  }
+
+
   // Demo roster of students flagged as having a support plan with their
   // counselor. In production this would come from your roster system —
   // for the pilot it's a simple hardcoded lookup by slugified first name.
@@ -95,6 +124,7 @@ const Swelli = (() => {
     const full = { ts: Date.now(), ...entry };
     entries.push(full);
     localStorage.setItem(entriesKey(session.studentId), JSON.stringify(entries));
+    postToBackend('entry', { studentId: session.studentId, studentName: session.name, ...full });
     return full;
   }
 
@@ -226,6 +256,7 @@ const Swelli = (() => {
     };
     flags.push(flag);
     localStorage.setItem(FLAGS_KEY, JSON.stringify(flags));
+    postToBackend('flag', flag);
     return flag;
   }
   function getFlags(){ return safeParse(localStorage.getItem(FLAGS_KEY), []); }
@@ -289,6 +320,7 @@ const Swelli = (() => {
     getEntries, addEntry, updateLastEntry, computeStats, relativeDay,
     startPreview, endPreview,
     scanText, checkAndFlag, addFlag, getFlags, getUnacknowledgedFlags, acknowledgeFlag, showSafetyOverlay,
+    fetchRemoteFlags, acknowledgeRemoteFlag,
     BUDDY_ICONS, MOOD_ICONS, MOOD_LABELS, GROWTH_STAGES,
   };
 })();
