@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swelli — Seed Garden</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body{ display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--mint-pale); }
+  .seed-card{ background:#fff; border-radius:var(--radius-lg); padding:36px 30px; max-width:380px; width:100%; text-align:center; box-shadow:var(--shadow-card); }
+  .seed-card h1{ font-size:22px; margin-bottom:8px; }
+  .seed-card p{ color:var(--ink-soft); font-weight:700; margin:0 0 24px; }
+</style>
+</head>
+<body>
+<div class="seed-card">
+  <div id="seedEmoji" style="font-size:60px;margin-bottom:12px;">🌱</div>
+  <h1 class="display" id="seedTitle">Planting your garden…</h1>
+  <p id="seedMsg">Setting up 16 days of check-ins for Tashanna</p>
+</div>
+
+<script src="data.js"></script>
+<script>
+  const NAME       = 'Tashanna';
+  const CLASS_CODE = 'BETA2026';
+  const BUDDY      = 'fox';
+  const SCHOOL     = 'Riverbend Elementary';
+
+  // Build the same studentId that data.js createSession() would produce
+  function slugify(s){ return (s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+  const studentId = `${slugify(NAME)}-${slugify(CLASS_CODE)}`;
+
+  // Session
+  const session = { studentId, name:NAME, buddy:BUDDY, school:SCHOOL, hasPlan:false, isPreview:false };
+  localStorage.setItem('swelli:session', JSON.stringify(session));
+
+  // 16 days of entries — one per day going back 15 days from today
+  const moods    = ['happy','laughing','tired','happy','sad','anxious','happy','angry','happy','laughing','tired','happy','anxious','happy','laughing','happy'];
+  const acts     = ['writing','drawing','games','mapping','writing','games','drawing','games','writing','mapping','games','drawing','writing','games','mapping','writing'];
+  const details  = [
+    'Wrote about her weekend','Drew a butterfly','Played Feelings Match','Did feelings map',
+    'Wrote about missing home','Played Calm Counter','Drew a rainbow','Breathing Buddy',
+    'Wrote about a good day','Mapped feeling happy','Name That Feeling quiz','Drew flowers',
+    'Wrote about feeling worried','Calm Counter 5-4-3-2-1','Mapped a goal','Wrote gratitude list',
+  ];
+
+  const entries = [];
+  const now = Date.now();
+  const DAY = 24 * 60 * 60 * 1000;
+
+  for(let i = 15; i >= 0; i--){
+    // Place each entry at roughly 10am on that day
+    const date = new Date(now - i * DAY);
+    date.setHours(10, Math.floor(Math.random()*50), 0, 0);
+    const idx = 15 - i;
+    entries.push({
+      ts:           date.getTime(),
+      mood:         moods[idx],
+      note:         '',
+      activity:     acts[idx],
+      activityDetail: details[idx],
+      forCounselor: false,
+      counselorNote:'',
+      flagged:      false,
+    });
+  }
+
+  localStorage.setItem(`swelli:entries:${studentId}`, JSON.stringify(entries));
+
+  // Default settings
+  localStorage.setItem(`swelli:settings:${studentId}`, JSON.stringify({
+    theme:'mint', font:'friendly', checkInFrequency:'weekly', displayName:'Tashanna',
+  }));
+
+  // Show success then redirect
+  document.getElementById('seedEmoji').textContent = '🌻';
+  document.getElementById('seedTitle').textContent = 'Garden planted!';
+  document.getElementById('seedMsg').textContent   = '16 days of check-ins seeded. Taking you home in 2 seconds…';
+
+  setTimeout(()=> window.location.href = 'home.html', 2000);
+</script>
+</body>
+</html>
