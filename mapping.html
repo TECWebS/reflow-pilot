@@ -6,383 +6,302 @@
 <title>Swelli — My Map</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  .map-step{ margin-bottom: 24px; display:none; }
-  .map-step.active{ display:block; }
-  .map-step h2{ font-size: 18px; margin-bottom: 4px; }
-  .map-step .hint{ color: var(--ink-soft); font-weight:700; font-size: 13px; margin: 0 0 12px; }
-  .pick-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:12px; }
-  .pick-card{
-    background:#fff; border:3px solid var(--line); border-radius: var(--radius-md);
-    padding: 14px 8px; text-align:center; font-weight:800; font-size:13px;
-    display:flex; flex-direction:column; align-items:center; gap:6px;
+  /* Step 1 - feeling picker */
+  .pick-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .pick-card{ background:#fff; border:3px solid var(--line); border-radius:var(--radius-md); padding:14px 8px; text-align:center; font-weight:800; font-size:13px; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .pick-card:hover{ border-color:var(--mint); }
+  .pick-card.selected{ border-color:var(--coral); background:#FFF1EC; }
+
+  /* Bubble map wrapper */
+  .bubble-map-wrap{ position:relative; }
+
+  /* SVG connector lines behind everything */
+  .bm-connectors{
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    pointer-events:none; z-index:0; overflow:visible;
   }
-  .pick-card .icon{ width:30px; height:30px; }
-  .pick-card:hover{ border-color: var(--mint); }
-  .pick-card.selected{ border-color: var(--coral); background:#FFF1EC; }
-  .issue-box textarea{
-    width:100%; min-height: 100px; border-radius: var(--radius-md); border:2px solid var(--line);
-    padding: 14px 16px; font-family:'Nunito'; font-size:15px; font-weight:600; resize: vertical;
-    background: var(--cream);
+
+  /* Main grid */
+  .bm-grid{
+    display:grid;
+    grid-template-columns: 1fr 200px 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap:18px;
+    position:relative; z-index:1;
+    min-height:440px;
   }
-  .issue-box textarea:focus{ outline:none; border-color: var(--mint); background:#fff; }
-  .chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin: 10px 0 0; }
-  .chip{
-    background: var(--mint-paler); border:2px solid var(--mint-pale); border-radius:999px;
-    padding: 8px 14px; font-size:13px; font-weight:700; color: var(--mint-deep);
+
+  /* Corner boxes */
+  .bm-box{
+    background:#fff; border-radius:var(--radius-lg); box-shadow:var(--shadow-card);
+    padding:18px; display:flex; flex-direction:column; gap:10px;
   }
-  .chip:hover{ background: var(--mint-pale); }
-  .path-progress-wrap{ display:flex; align-items:center; gap:0; margin: 18px 0 22px; overflow-x:auto; padding:4px 0 10px; }
-  .path-bubble{
-    width:54px; height:54px; border-radius:50%; border:3px solid var(--line); background:#fff;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Baloo 2';
-    font-weight:800; font-size:18px; transition: background .2s, border-color .2s;
+  .bm-box-title{ font-weight:800; font-size:14px; color:var(--ink); line-height:1.3; margin:0; }
+  .bm-box.top-left{ grid-column:1; grid-row:1; }
+  .bm-box.top-right{ grid-column:3; grid-row:1; }
+  .bm-box.bottom-left{ grid-column:1; grid-row:2; }
+  .bm-box.bottom-right{ grid-column:3; grid-row:2; }
+
+  /* Center bubble */
+  .bm-center{
+    grid-column:2; grid-row:1/3; align-self:center; justify-self:center;
+    width:170px; height:170px; border-radius:50%;
+    background:linear-gradient(135deg, var(--mint), var(--mint-deep));
+    color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:18px;
+    box-shadow:0 12px 32px -10px rgba(47,156,141,0.45);
+    font-family:'Baloo 2'; font-weight:800;
   }
-  .path-bubble.start{ border-color:var(--coral); background:#FFE3D6; }
-  .path-bubble.done{ border-color:var(--mint-deep); background:var(--mint-deep); color:#fff; }
-  .path-line-seg{ flex:1; height:3px; background:var(--line); min-width:20px; transition:background .2s; }
-  .path-line-seg.done{ background:var(--mint-deep); }
-  .final-step-card{
-    display:flex; align-items:center; gap:14px; background:var(--cream); border-radius:var(--radius-md);
-    padding:14px 16px; border:2px solid var(--line); margin-bottom:10px; transition: border-color .2s, background .2s;
+  .bm-center .bm-emoji{ font-size:48px; line-height:1; display:block; margin-bottom:6px; }
+  .bm-center .bm-word{ font-size:18px; line-height:1.1; }
+
+  /* Intensity meter */
+  .intensity-wrap{ display:flex; flex-direction:column; gap:8px; }
+  .intensity-track{ height:16px; background:var(--mint-pale); border-radius:999px; overflow:hidden; }
+  .intensity-fill{ height:100%; border-radius:999px; background:linear-gradient(to right,var(--mint),var(--coral)); transition:width .15s; }
+  .intensity-labels{ display:flex; justify-content:space-between; font-size:11px; font-weight:700; color:var(--ink-soft); }
+  .intensity-val{ font-family:'Baloo 2'; font-weight:800; font-size:22px; color:var(--mint-deep); text-align:center; }
+  input[type=range].intensity-slider{ width:100%; accent-color:var(--mint-deep); }
+
+  /* Valence toggle */
+  .valence-row{ display:flex; gap:8px; }
+  .val-btn{
+    flex:1; padding:10px 6px; border-radius:var(--radius-md); border:3px solid var(--line);
+    font-weight:800; font-size:13px; background:#fff;
+    transition:border-color .12s, background .12s;
   }
-  .final-step-card.done{ background:var(--mint-paler); border-color:var(--mint); }
-  .step-check{
-    width:32px; height:32px; border-radius:50%; border:2px solid var(--line); background:#fff;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px;
+  .val-btn.neg.active{ border-color:var(--coral); background:#FFF1EC; color:var(--coral-deep); }
+  .val-btn.pos.active{ border-color:var(--mint-deep); background:var(--mint-paler); color:var(--mint-deep); }
+  .val-btn:not(.active){ opacity:0.6; }
+
+  /* Textarea inside boxes */
+  .bm-textarea{
+    flex:1; min-height:80px; border-radius:var(--radius-sm); border:2px solid var(--line);
+    padding:10px 12px; font-family:'Nunito'; font-size:14px; font-weight:600; resize:vertical;
+    background:var(--cream);
   }
-  .final-step-card.done .step-check{ background:var(--mint-deep); border-color:var(--mint-deep); color:#fff; }
-  .final-step-card:not(.done) .step-check::after{ content:''; }
-  .final-step-card.done .step-check::after{ content:'✓'; }
-  .final-steps{ display:flex; flex-direction:column; gap:12px; margin-top: 22px; }
-  .step-card{ display:flex; gap:14px; align-items:flex-start; background: var(--cream); border-radius: var(--radius-md); padding: 14px 16px; }
-  .step-card .n{
-    width:30px; height:30px; border-radius:50%; background: var(--mint-deep); color:#fff; font-weight:800;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Baloo 2';
+  .bm-textarea:focus{ outline:none; border-color:var(--mint); background:#fff; }
+  .bm-action-prompt{ font-size:13px; font-weight:700; color:var(--mint-deep); margin:0; }
+
+  /* Mobile: stack vertically */
+  @media (max-width:640px){
+    .bm-grid{
+      grid-template-columns:1fr;
+      grid-template-rows:auto;
+      min-height:auto;
+    }
+    .bm-box.top-left{ grid-column:1; grid-row:2; }
+    .bm-box.top-right{ grid-column:1; grid-row:3; }
+    .bm-box.bottom-left{ grid-column:1; grid-row:4; }
+    .bm-box.bottom-right{ grid-column:1; grid-row:5; }
+    .bm-center{ grid-column:1; grid-row:1; width:140px; height:140px; justify-self:center; }
+    .bm-connectors{ display:none; }
+    .pick-grid{ grid-template-columns:repeat(2,1fr); }
   }
-  .actions-row{ text-align:center; margin-top: 18px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
-  @media (max-width:640px){ .pick-grid{ grid-template-columns: repeat(2,1fr); } }
 </style>
 </head>
 <body>
 
 <div class="topbar">
+  <button class="back" onclick="location.href='unwind.html'" aria-label="Back" style="display:none;" id="backBtn">←</button>
   <div class="brand"><span class="brand-name">Swelli for Education</span></div>
-  <nav>
-    <a href="home.html">Home</a>
-    <a href="settings.html">Settings</a>
-  </nav>
+  <nav><a href="home.html">Home</a><a href="settings.html">Settings</a></nav>
+  <span class="avatar-pill" id="avatarPill"><span class="dot" id="avatarDot"></span><span id="pillName">Me</span></span>
 </div>
 
-<div class="page narrow">
-  <h1 class="display" style="margin-bottom:18px; display:flex; align-items:center; gap:10px;"><svg class="icon icon-md" style="color:var(--coral);"><use href="icons.svg#icon-clover"/></svg>My Map</h1>
+<div class="page">
+  <h1 class="display" style="margin-bottom:18px;display:flex;align-items:center;gap:10px;">
+    <svg class="icon icon-md" style="color:var(--coral);"><use href="icons.svg#icon-clover"/></svg>My Map
+  </h1>
 
-  <!-- Step 1 -->
-  <div class="card map-step active" id="step1">
-    <h2>Step 1 — How are you feeling right now?</h2>
-    <p class="hint">Pick the feeling that's closest.</p>
+  <!-- STEP 1 -->
+  <div class="card" id="step1">
+    <h2 style="margin-bottom:4px;">How are you feeling right now?</h2>
+    <p style="color:var(--ink-soft);font-weight:700;font-size:13px;margin:0 0 14px;">Pick the feeling that's closest.</p>
     <div class="pick-grid" id="feelingGrid"></div>
-    <div class="actions-row"><button class="btn btn-primary" id="toStep2" disabled>Next →</button></div>
   </div>
 
-  <!-- Step 2 -->
-  <div class="card map-step" id="step2">
-    <h2>Step 2 — What's going on?</h2>
-    <p class="hint">Tell us in your own words — there's no wrong way to say it.</p>
-    <div class="issue-box">
-      <textarea id="issueText" placeholder="Type what's going on, or tap one below to start…"></textarea>
-      <div class="chip-row" id="chipRow"></div>
-    </div>
-    <div class="actions-row">
-      <button class="btn btn-ghost" id="toStep1">← Back</button>
-      <button class="btn btn-primary" id="toStep3" disabled>Get suggested steps →</button>
-    </div>
-  </div>
-
-  <!-- Step 3: drag to reorder -->
-  <div class="card map-step" id="step3">
-    <h2>Step 3 — Put these in your order</h2>
-    <p class="hint">Drag <svg class="icon icon-sm" style="vertical-align:-3px; color:var(--ink-soft);"><use href="icons.svg#icon-grip"/></svg> to reorder these into whatever order makes the most sense to you.</p>
-    <div class="drag-list" id="dragList"></div>
-    <div class="actions-row">
-      <button class="btn btn-ghost" id="toStep2b">← Back</button>
-      <button class="btn btn-primary" id="toStep4">Build my path →</button>
-    </div>
-  </div>
-
-  <!-- Step 4: interactive checklist path -->
-  <div class="card map-step" id="step4">
-    <h2 style="margin-bottom:4px;">Your path is ready</h2>
-    <p class="hint">Check off each step as you work through it. The bubbles fill in as you go.</p>
-
-    <!-- Visual progress bar -->
-    <div class="path-progress-wrap" id="pathProgressWrap"></div>
-
-    <!-- Step checklist -->
-    <div class="final-steps" id="finalSteps"></div>
-
-    <div class="path-complete" id="pathComplete" style="display:none;">
-      <p style="font-weight:800; font-size:16px; color:var(--mint-deep); text-align:center;">You worked through your whole plan!</p>
+  <!-- STEP 2 — Bubble Map -->
+  <div class="card" id="step2" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+      <h2 style="margin:0;" id="step2Title">Your Feelings Map</h2>
+      <button class="btn btn-ghost" style="font-size:13px;padding:8px 14px;" onclick="goBack()">← Change feeling</button>
     </div>
 
-    <div class="actions-row">
-      <button class="btn btn-secondary" id="saveMapBtn">Save my map</button>
-      <button class="btn btn-ghost" id="startOverBtn">Make a new map</button>
+    <div class="bubble-map-wrap">
+
+      <!-- Connector lines drawn relative to the grid -->
+      <svg class="bm-connectors" id="bmSvg" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <!-- Lines from center bubble to each corner box (approximate layout positions) -->
+        <line x1="33" y1="25" x2="42" y2="38" stroke="var(--mint-pale)" stroke-width="1.5"/>
+        <line x1="67" y1="25" x2="58" y2="38" stroke="var(--mint-pale)" stroke-width="1.5"/>
+        <line x1="33" y1="75" x2="42" y2="62" stroke="var(--mint-pale)" stroke-width="1.5"/>
+        <line x1="67" y1="75" x2="58" y2="62" stroke="var(--mint-pale)" stroke-width="1.5"/>
+      </svg>
+
+      <div class="bm-grid">
+
+        <!-- Top Left: Intensity meter -->
+        <div class="bm-box top-left">
+          <p class="bm-box-title">How strong is this feeling?</p>
+          <div class="intensity-wrap">
+            <div class="intensity-val" id="intensityVal">5 / 10</div>
+            <input type="range" class="intensity-slider" id="intensitySlider" min="1" max="10" value="5">
+            <div class="intensity-track"><div class="intensity-fill" id="intensityFill" style="width:50%"></div></div>
+            <div class="intensity-labels"><span>Low</span><span>Medium</span><span>High</span></div>
+          </div>
+        </div>
+
+        <!-- Center bubble -->
+        <div class="bm-center" id="bmCenter">
+          <span class="bm-emoji" id="centerEmoji"></span>
+          <span class="bm-word" id="centerWord">Happy</span>
+        </div>
+
+        <!-- Top Right: Because prompt -->
+        <div class="bm-box top-right">
+          <p class="bm-box-title">I'm feeling this emotion because…</p>
+          <textarea class="bm-textarea" id="becauseTxt" placeholder="Write here…"></textarea>
+        </div>
+
+        <!-- Bottom Left: Positive or negative toggle -->
+        <div class="bm-box bottom-left">
+          <p class="bm-box-title">This emotion is…</p>
+          <div class="valence-row">
+            <button class="val-btn neg active" id="valNeg">
+              <iconify-icon icon="fluent-emoji:downwards-button" width="18"></iconify-icon><br>Negative
+            </button>
+            <button class="val-btn pos" id="valPos">
+              <iconify-icon icon="fluent-emoji:upwards-button" width="18"></iconify-icon><br>Positive
+            </button>
+          </div>
+        </div>
+
+        <!-- Bottom Right: Adaptive action prompt -->
+        <div class="bm-box bottom-right">
+          <p class="bm-action-prompt" id="actionPrompt">It's okay to have big feelings. What is one safe and healthy thing you can do to help yourself feel better?</p>
+          <textarea class="bm-textarea" id="actionTxt" placeholder="Write here…"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
+      <button class="btn btn-primary" id="saveMapBtn">Save my map</button>
+      <button class="btn btn-ghost" id="startOverBtn">Start over</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast">Nice work! Your map was saved.</div>
+<div class="toast" id="toast">Map saved! Taking you home…</div>
 
 <script src="data.js"></script>
 <script>
-  Swelli.requireSession();
+Swelli.requireSession();
+Swelli.setupAvatarPill();
 
-  const feelings = [
-    { id:'happy', label:'Happy' }, { id:'laughing', label:'Silly' }, { id:'tired', label:'Tired' },
-    { id:'angry', label:'Angry' }, { id:'sad', label:'Sad' }, { id:'anxious', label:'Worried' },
-  ];
-  let chosenFeeling = null;
+const FEELINGS = [
+  {id:'happy',   label:'Happy'  },
+  {id:'laughing',label:'Silly'  },
+  {id:'tired',   label:'Tired'  },
+  {id:'angry',   label:'Angry'  },
+  {id:'sad',     label:'Sad'    },
+  {id:'anxious', label:'Worried'},
+];
 
-  const feelGrid = document.getElementById('feelingGrid');
-  feelings.forEach(f=>{
-    const b = document.createElement('button');
-    b.className = 'pick-card';
-    b.innerHTML = `${Swelli.emoji(Swelli.MOOD_ICONS[f.id], 32)}<span style="font-size:12px;font-weight:800;">${f.label}</span>`;
-    b.addEventListener('click', ()=>{
-      chosenFeeling = f;
-      feelGrid.querySelectorAll('.pick-card').forEach(c=>c.classList.remove('selected'));
-      b.classList.add('selected');
-      document.getElementById('toStep2').disabled = false;
-    });
-    feelGrid.appendChild(b);
+// Suggested default valence per feeling (can be overridden by student)
+const DEFAULT_VALENCE = {
+  happy:'pos', laughing:'pos', tired:'neg', angry:'neg', sad:'neg', anxious:'neg',
+};
+
+let chosenFeeling = null;
+let currentValence = 'neg';
+
+// ---- Step 1: feeling picker ----
+const grid = document.getElementById('feelingGrid');
+FEELINGS.forEach(f=>{
+  const b = document.createElement('button');
+  b.className = 'pick-card';
+  b.innerHTML = Swelli.emoji(Swelli.MOOD_ICONS[f.id], 36) + `<span style="font-size:12px;">${f.label}</span>`;
+  b.addEventListener('click', ()=>{
+    chosenFeeling = f;
+    grid.querySelectorAll('.pick-card').forEach(c=>c.classList.remove('selected'));
+    b.classList.add('selected');
+    setTimeout(()=> openBubbleMap(f), 200);
   });
+  grid.appendChild(b);
+});
 
-  // ---- quick chips (help kids who don't know what to type) ----
-  const chips = [
-    "A friend and I are fighting",
-    "I feel left out",
-    "I'm worried about a test",
-    "I'm having a hard time focusing",
-    "I miss someone",
-    "Something at home is bothering me",
-  ];
-  const chipRow = document.getElementById('chipRow');
-  chips.forEach(c=>{
-    const b = document.createElement('button');
-    b.className = 'chip';
-    b.textContent = c;
-    b.addEventListener('click', ()=>{
-      issueText.value = c;
-      document.getElementById('toStep3').disabled = false;
-    });
-    chipRow.appendChild(b);
-  });
+function openBubbleMap(f){
+  document.getElementById('step1').style.display='none';
+  document.getElementById('step2').style.display='block';
+  document.getElementById('step2Title').textContent = `${f.label} Map`;
 
-  const issueText = document.getElementById('issueText');
-  issueText.addEventListener('input', ()=>{
-    document.getElementById('toStep3').disabled = issueText.value.trim().length === 0;
-  });
+  // Populate center bubble
+  document.getElementById('centerEmoji').innerHTML = Swelli.emoji(Swelli.MOOD_ICONS[f.id], 44);
+  document.getElementById('centerWord').textContent = f.label;
 
-  // ---- step navigation ----
-  function showStep(id){
-    document.querySelectorAll('.map-step').forEach(s=>s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+  // Set suggested valence
+  const suggested = DEFAULT_VALENCE[f.id] || 'neg';
+  setValence(suggested);
+
+  // Reset fields
+  document.getElementById('intensitySlider').value = 5;
+  document.getElementById('intensityFill').style.width = '50%';
+  document.getElementById('intensityVal').textContent = '5 / 10';
+  document.getElementById('becauseTxt').value = '';
+  document.getElementById('actionTxt').value = '';
+}
+
+function goBack(){
+  document.getElementById('step2').style.display='none';
+  document.getElementById('step1').style.display='block';
+}
+
+// ---- Intensity slider ----
+document.getElementById('intensitySlider').addEventListener('input', e=>{
+  const v = e.target.value;
+  document.getElementById('intensityFill').style.width = ((v-1)/9*100)+'%';
+  document.getElementById('intensityVal').textContent = `${v} / 10`;
+});
+
+// ---- Valence toggle ----
+function setValence(v){
+  currentValence = v;
+  document.getElementById('valNeg').classList.toggle('active', v==='neg');
+  document.getElementById('valPos').classList.toggle('active', v==='pos');
+  const prompt = document.getElementById('actionPrompt');
+  prompt.textContent = v==='pos'
+    ? 'What is one thing you can do to help yourself feel this way again?'
+    : "It's okay to have big feelings. What is one safe and healthy thing you can do to help yourself feel better?";
+}
+
+document.getElementById('valNeg').addEventListener('click', ()=> setValence('neg'));
+document.getElementById('valPos').addEventListener('click', ()=> setValence('pos'));
+
+// ---- Save ----
+const toast = document.getElementById('toast');
+document.getElementById('saveMapBtn').addEventListener('click', ()=>{
+  const because = document.getElementById('becauseTxt').value.trim();
+  const action  = document.getElementById('actionTxt').value.trim();
+  const intensity = document.getElementById('intensitySlider').value;
+
+  const hits = Swelli.checkAndFlag(because + ' ' + action, 'My Map');
+  if(hits.length){
+    Swelli.updateLastEntry({flagged:true, flagCategories:hits.map(h=>h.category)});
+    Swelli.showSafetyOverlay(hits, ()=> Swelli.saveAndGoHome({
+      activity:'mapping', activityDetail: because.slice(0,200),
+    }, null, 0));
+  } else {
+    Swelli.saveAndGoHome({
+      activity:'mapping',
+      activityDetail: because.slice(0,200),
+      mapData:{ feeling:chosenFeeling?.id, intensity, because, action, valence:currentValence },
+    }, toast);
   }
-  document.getElementById('toStep2').addEventListener('click', ()=> showStep('step2'));
-  document.getElementById('toStep1').addEventListener('click', ()=> showStep('step1'));
-  document.getElementById('toStep2b').addEventListener('click', ()=> showStep('step2'));
+});
 
-  // ---- keyword-matched step suggestions ----
-  const stepBank = [
-    { text:"Take 5 slow breaths before doing anything else", tags:['angry','worried','tired'] },
-    { text:"Tell a trusted adult or friend how you feel", tags:['sad','worried','help'] },
-    { text:"Use 'I feel...' words to explain what happened", tags:['angry','friend'] },
-    { text:"Ask if you can start over or try again together", tags:['friend'] },
-    { text:"Write or draw about it before talking to anyone", tags:['sad'] },
-    { text:"Pick the smallest first step and just start there", tags:['focus','tired'] },
-    { text:"Give yourself credit for noticing how you feel", tags:['proud'] },
-    { text:"Ask one trusted adult for help today", tags:['help'] },
-    { text:"Take a break, then try again with a calm body", tags:['angry','tired'] },
-    { text:"Take a few minutes to rest before trying again", tags:['tired'] },
-  ];
-  const keywordTags = {
-    friend:['friend'], mean:['friend','help'], fight:['angry','friend'], bully:['friend','help'],
-    mad:['angry'], angry:['angry'], sad:['sad'], cry:['sad'], lonely:['sad','friend'], 'left out':['sad','friend'],
-    focus:['focus'], distract:['focus'], tired:['tired'], sleep:['tired'],
-    worry:['worried'], worried:['worried'], scare:['worried'], nervous:['worried'], test:['worried','focus'],
-    help:['help'], hurt:['sad','help'], miss:['sad'], home:['sad','help'],
-  };
-  const feelingTag = { happy:'proud', laughing:'proud', tired:'tired', angry:'angry', sad:'sad', anxious:'worried' };
-
-  let stepsArray = [];
-
-  function generateSteps(){
-    const text = issueText.value.toLowerCase();
-    const active = new Set();
-    if(chosenFeeling) active.add(feelingTag[chosenFeeling.id]);
-    Object.keys(keywordTags).forEach(k=>{
-      if(text.includes(k)) keywordTags[k].forEach(t=>active.add(t));
-    });
-    const scored = stepBank
-      .map(s => ({ s, score: s.tags.filter(t=>active.has(t)).length }))
-      .sort((a,b)=> b.score - a.score);
-
-    let chosen = scored.filter(x=>x.score>0).slice(0,5).map(x=>x.s.text);
-    if(chosen.length < 4){
-      const fillers = stepBank.map(s=>s.text).filter(t=>!chosen.includes(t));
-      while(chosen.length < 4 && fillers.length) chosen.push(fillers.shift());
-    }
-    return chosen;
-  }
-
-  document.getElementById('toStep3').addEventListener('click', ()=>{
-    stepsArray = generateSteps();
-    renderDragList();
-    showStep('step3');
-  });
-
-  // ---- drag-and-drop reorder (Pointer Events — works on touch + mouse) ----
-  function renderDragList(){
-    const wrap = document.getElementById('dragList');
-    wrap.innerHTML = '';
-    stepsArray.forEach((text, i)=>{
-      const item = document.createElement('div');
-      item.className = 'drag-item';
-      item.innerHTML = `
-        <span class="grip"><svg class="icon"><use href="icons.svg#icon-grip"/></svg></span>
-        <span class="n">${i+1}</span>
-        <span class="txt">${text}</span>`;
-      wrap.appendChild(item);
-      item.querySelector('.grip').addEventListener('pointerdown', (e)=> onGripDown(e, item));
-    });
-  }
-
-  function onGripDown(e, item){
-    e.preventDefault();
-    const list = document.getElementById('dragList');
-    const startIndex = Array.from(list.children).indexOf(item);
-    const rect = item.getBoundingClientRect();
-    const offsetY = e.clientY - rect.top;
-
-    const placeholder = document.createElement('div');
-    placeholder.className = 'drag-item placeholder';
-    placeholder.style.height = rect.height + 'px';
-
-    item.style.position = 'fixed';
-    item.style.top = rect.top + 'px';
-    item.style.left = rect.left + 'px';
-    item.style.width = rect.width + 'px';
-    item.style.zIndex = '50';
-    item.classList.add('dragging');
-    list.insertBefore(placeholder, item);
-
-    function onMove(ev){
-      item.style.top = (ev.clientY - offsetY) + 'px';
-      const siblings = Array.from(list.children).filter(el => el !== placeholder && el !== item);
-      let inserted = false;
-      for(const sib of siblings){
-        const sRect = sib.getBoundingClientRect();
-        if(ev.clientY < sRect.top + sRect.height/2){
-          list.insertBefore(placeholder, sib);
-          inserted = true;
-          break;
-        }
-      }
-      if(!inserted) list.appendChild(placeholder);
-    }
-    function onUp(){
-      document.removeEventListener('pointermove', onMove);
-      document.removeEventListener('pointerup', onUp);
-      const finalIndex = Array.from(list.children).indexOf(placeholder);
-      list.insertBefore(item, placeholder);
-      list.removeChild(placeholder);
-      item.style.position=''; item.style.top=''; item.style.left=''; item.style.width=''; item.style.zIndex='';
-      item.classList.remove('dragging');
-
-      const moved = stepsArray.splice(startIndex,1)[0];
-      stepsArray.splice(finalIndex,0,moved);
-      renderDragList();
-    }
-    document.addEventListener('pointermove', onMove);
-    document.addEventListener('pointerup', onUp);
-  }
-
-  // ---- Step 4: build interactive checklist from the user's chosen order ----
-  let stepsDone = [];
-
-  function renderStep4(){
-    stepsDone = new Array(stepsArray.length).fill(false);
-
-    // Progress bubble row
-    const progressWrap = document.getElementById('pathProgressWrap');
-    progressWrap.innerHTML = '';
-    const startBubble = document.createElement('div');
-    startBubble.className = 'path-bubble start';
-    startBubble.innerHTML = Swelli.emoji(Swelli.MOOD_ICONS[chosenFeeling.id], 28);
-    progressWrap.appendChild(startBubble);
-
-    stepsArray.forEach((_,i)=>{
-      const line = document.createElement('div');
-      line.className = 'path-line-seg';
-      line.id = `pline-${i}`;
-      progressWrap.appendChild(line);
-      const bubble = document.createElement('div');
-      bubble.className = 'path-bubble';
-      bubble.id = `pbubble-${i}`;
-      bubble.textContent = i + 1;
-      progressWrap.appendChild(bubble);
-    });
-
-    // Checklist
-    const list = document.getElementById('finalSteps');
-    list.innerHTML = '';
-    stepsArray.forEach((text, i)=>{
-      const card = document.createElement('div');
-      card.className = 'final-step-card';
-      card.id = `fstep-${i}`;
-      card.innerHTML = `<div class="step-check" id="scheck-${i}"></div><div>${text}</div>`;
-      card.addEventListener('click', ()=> toggleStep(i));
-      list.appendChild(card);
-    });
-    document.getElementById('pathComplete').style.display='none';
-  }
-
-  function toggleStep(i){
-    stepsDone[i] = !stepsDone[i];
-    const card = document.getElementById(`fstep-${i}`);
-    const line = document.getElementById(`pline-${i}`);
-    const bubble = document.getElementById(`pbubble-${i}`);
-    card.classList.toggle('done', stepsDone[i]);
-    if(line) line.classList.toggle('done', stepsDone[i]);
-    if(bubble){ bubble.classList.toggle('done', stepsDone[i]); if(stepsDone[i]) bubble.textContent = '✓'; else bubble.textContent = i+1; }
-    if(stepsDone.every(Boolean)) document.getElementById('pathComplete').style.display='block';
-  }
-
-  document.getElementById('toStep4').addEventListener('click', ()=>{
-    renderStep4();
-    showStep('step4');
-  });
-
-  const toast = document.getElementById('toast');
-  document.getElementById('saveMapBtn').addEventListener('click', ()=>{
-    const text = issueText.value.trim();
-    const hits = Swelli.checkAndFlag(text, 'My Map issue');
-    if(hits.length){
-      Swelli.updateLastEntry({ flagged:true, flagCategories:hits.map(h=>h.category) });
-      Swelli.showSafetyOverlay(hits, ()=> Swelli.saveAndGoHome({ activity:'mapping', activityDetail:text.slice(0,200) }, null, 0));
-    } else {
-      Swelli.saveAndGoHome({ activity:'mapping', activityDetail:text.slice(0,200) }, toast);
-    }
-  });
-
-  document.getElementById('startOverBtn').addEventListener('click', ()=>{
-    chosenFeeling = null;
-    issueText.value = '';
-    document.getElementById('toStep2').disabled = true;
-    document.getElementById('toStep3').disabled = true;
-    document.querySelectorAll('.pick-card').forEach(c=>c.classList.remove('selected'));
-    showStep('step1');
-  });
+document.getElementById('startOverBtn').addEventListener('click', goBack);
 </script>
 </body>
 </html>

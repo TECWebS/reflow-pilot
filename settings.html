@@ -21,12 +21,12 @@
   .buddy-option:hover{ border-color:var(--mint); }
   .buddy-option.selected{ border-color:var(--coral); background:#FFF1EC; transform:scale(1.04); }
 
-  /* Theme swatches */
-  .theme-row{ display:flex; gap:12px; flex-wrap:wrap; }
+  /* Theme swatches — 4 per row */
+  .theme-row{ display:grid; grid-template-columns: repeat(4,1fr); gap:10px; }
   .theme-swatch{
     display:flex; flex-direction:column; align-items:center; gap:6px;
     background:#fff; border:3px solid var(--line); border-radius: var(--radius-md);
-    padding: 16px 18px; min-width:80px; font-weight:800; font-size:12px; color:var(--ink);
+    padding: 12px 8px; font-weight:800; font-size:12px; color:var(--ink);
     transition: border-color .12s, transform .1s;
   }
   .theme-swatch .dots{ display:flex; gap:4px; }
@@ -34,25 +34,21 @@
   .theme-swatch:hover{ border-color:var(--mint); }
   .theme-swatch.selected{ border-color:var(--coral); background:#FFF1EC; transform:scale(1.04); }
 
-  /* Font options */
-  .font-row{ display:flex; gap:12px; flex-wrap:wrap; }
+  /* Font options — 4 per row */
+  .font-row{ display:grid; grid-template-columns: repeat(4,1fr); gap:10px; }
   .font-option{
     background:#fff; border:3px solid var(--line); border-radius: var(--radius-md);
-    padding: 16px 22px; text-align:center; min-width:100px;
+    padding: 14px 8px; text-align:center;
     transition: border-color .12s;
   }
   .font-option:hover{ border-color:var(--mint); }
   .font-option.selected{ border-color:var(--coral); background:#FFF1EC; }
-  .font-option .sample{ font-size:28px; font-weight:700; display:block; margin-bottom:4px; }
-  .font-option .flabel{ font-size:12px; font-weight:800; color:var(--ink-soft); }
+  .font-option .sample{ font-size:26px; font-weight:700; display:block; margin-bottom:4px; }
+  .font-option .flabel{ font-size:11px; font-weight:800; color:var(--ink-soft); }
 
   /* Frequency toggle */
   .freq-row{ display:flex; gap:12px; flex-wrap:wrap; }
-  .freq-option{
-    flex:1; min-width:140px; background:#fff; border:3px solid var(--line);
-    border-radius: var(--radius-md); padding: 16px; text-align:center;
-    font-weight:800; font-size:14px; transition: border-color .12s;
-  }
+  .freq-option{ flex:1; min-width:140px; background:#fff; border:3px solid var(--line); border-radius: var(--radius-md); padding: 16px; text-align:center; font-weight:800; font-size:14px; transition: border-color .12s; }
   .freq-option .freq-icon{ font-size:28px; display:block; margin-bottom:6px; }
   .freq-option:hover{ border-color:var(--mint); }
   .freq-option.selected{ border-color:var(--coral); background:#FFF1EC; }
@@ -64,16 +60,14 @@
   .save-confirm.show{ display:inline; }
 
   /* Current buddy hero */
-  .buddy-hero{
-    background: linear-gradient(135deg, var(--mint), var(--mint-deep));
-    border-radius: var(--radius-lg); padding: 24px; text-align:center; margin-bottom:28px; color:#fff;
-  }
+  .buddy-hero{ background: linear-gradient(135deg, var(--mint), var(--mint-deep)); border-radius: var(--radius-lg); padding: 24px; text-align:center; margin-bottom:28px; color:#fff; }
   .buddy-hero .buddy-name{ font-family:'Baloo 2'; font-weight:800; font-size:20px; margin-top:8px; }
   .buddy-hero .buddy-greeting{ font-size:14px; font-weight:700; opacity:0.88; }
 
-  @media (max-width:480px){
+  @media (max-width:600px){
     .buddy-grid{ grid-template-columns: repeat(4,1fr); }
-    .theme-row, .font-row, .freq-row{ flex-direction:column; }
+    .theme-row{ grid-template-columns: repeat(3,1fr); }
+    .font-row{ grid-template-columns: repeat(2,1fr); }
   }
 </style>
 </head>
@@ -195,12 +189,17 @@
     themeRow.appendChild(btn);
   });
 
-  // ---- Font options ----
+  // ---- Font options — sample text renders in that font ----
   const fontRow = document.getElementById('fontRow');
   Object.entries(Swelli.FONTS).forEach(([key, font])=>{
+    if(font.url && !document.getElementById('sfont-'+key)){
+      const link = document.createElement('link');
+      link.id = 'sfont-'+key; link.rel = 'stylesheet'; link.href = font.url;
+      document.head.appendChild(link);
+    }
     const btn = document.createElement('button');
     btn.className = 'font-option' + (settings.font === key ? ' selected' : '');
-    btn.innerHTML = `<span class="sample" style="font-family:${font.family}">${font.sample}</span><span class="flabel">${font.label}</span>`;
+    btn.innerHTML = `<span class="sample" style="font-family:${font.family};line-height:1;">${font.sample}</span><span class="flabel">${font.label}</span>`;
     btn.addEventListener('click', ()=>{
       fontRow.querySelectorAll('.font-option').forEach(x=>x.classList.remove('selected'));
       btn.classList.add('selected');

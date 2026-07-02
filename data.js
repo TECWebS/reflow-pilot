@@ -340,17 +340,28 @@ const Swelli = (() => {
   const SETTINGS_KEY = (id) => `swelli:settings:${id}`;
 
   const THEMES = {
-    mint:     { label:'Mint',     emoji:'🌿', vars:{ '--mint-deep':'#2F9C8D','--mint':'#3FB3A2','--mint-pale':'#DCF2EC','--mint-paler':'#EFFAF7','--coral':'#FF8A65','--coral-deep':'#F26B45' } },
-    sunset:   { label:'Sunset',   emoji:'🌅', vars:{ '--mint-deep':'#BF5530','--mint':'#E07050','--mint-pale':'#FDEBD6','--mint-paler':'#FEF5ED','--coral':'#F4A460','--coral-deep':'#BF5530' } },
-    ocean:    { label:'Ocean',    emoji:'🌊', vars:{ '--mint-deep':'#1A5C8A','--mint':'#2980B9','--mint-pale':'#D4EAF7','--mint-paler':'#EAF5FC','--coral':'#5DADE2','--coral-deep':'#1A5C8A' } },
-    lavender: { label:'Lavender', emoji:'💜', vars:{ '--mint-deep':'#6B4A9B','--mint':'#9370CC','--mint-pale':'#EDE0F9','--mint-paler':'#F5EEFF','--coral':'#C39BD3','--coral-deep':'#6B4A9B' } },
-    forest:   { label:'Forest',   emoji:'🌲', vars:{ '--mint-deep':'#1E6B3C','--mint':'#27AE60','--mint-pale':'#C8E8D4','--mint-paler':'#E5F5EC','--coral':'#58D68D','--coral-deep':'#1E6B3C' } },
+    mint:     { label:'Mint',      emoji:'🌿', vars:{ '--mint-deep':'#2F9C8D','--mint':'#3FB3A2','--mint-pale':'#DCF2EC','--mint-paler':'#EFFAF7','--coral':'#FF8A65','--coral-deep':'#F26B45' } },
+    sunset:   { label:'Sunset',    emoji:'🌅', vars:{ '--mint-deep':'#BF5530','--mint':'#E07050','--mint-pale':'#FDEBD6','--mint-paler':'#FEF5ED','--coral':'#F4A460','--coral-deep':'#BF5530' } },
+    ocean:    { label:'Ocean',     emoji:'🌊', vars:{ '--mint-deep':'#1A5C8A','--mint':'#2980B9','--mint-pale':'#D4EAF7','--mint-paler':'#EAF5FC','--coral':'#5DADE2','--coral-deep':'#1A5C8A' } },
+    lavender: { label:'Lavender',  emoji:'💜', vars:{ '--mint-deep':'#6B4A9B','--mint':'#9370CC','--mint-pale':'#EDE0F9','--mint-paler':'#F5EEFF','--coral':'#C39BD3','--coral-deep':'#6B4A9B' } },
+    forest:   { label:'Forest',    emoji:'🌲', vars:{ '--mint-deep':'#1E6B3C','--mint':'#27AE60','--mint-pale':'#C8E8D4','--mint-paler':'#E5F5EC','--coral':'#58D68D','--coral-deep':'#1E6B3C' } },
+    ruby:     { label:'Ruby',      emoji:'❤️', vars:{ '--mint-deep':'#C0392B','--mint':'#E74C3C','--mint-pale':'#FDECEA','--mint-paler':'#FFF5F5','--coral':'#F1948A','--coral-deep':'#C0392B' } },
+    amber:    { label:'Amber',     emoji:'🍊', vars:{ '--mint-deep':'#D35400','--mint':'#E67E22','--mint-pale':'#FDEBD0','--mint-paler':'#FEF5E7','--coral':'#F0B27A','--coral-deep':'#D35400' } },
+    indigo:   { label:'Indigo',    emoji:'🌙', vars:{ '--mint-deep':'#2C3E7A','--mint':'#4A5FA8','--mint-pale':'#D8E0F5','--mint-paler':'#EEF2FC','--coral':'#7B8FC4','--coral-deep':'#2C3E7A' } },
+    rose:     { label:'Rose',      emoji:'🌹', vars:{ '--mint-deep':'#AD1457','--mint':'#D81B60','--mint-pale':'#FCE4EC','--mint-paler':'#FFF0F6','--coral':'#F48FB1','--coral-deep':'#AD1457' } },
+    slate:    { label:'Slate',     emoji:'🩶', vars:{ '--mint-deep':'#455A64','--mint':'#607D8B','--mint-pale':'#ECEFF1','--mint-paler':'#F5F7F8','--coral':'#90A4AE','--coral-deep':'#455A64' } },
+    peach:    { label:'Peach',     emoji:'🍑', vars:{ '--mint-deep':'#A0522D','--mint':'#CD853F','--mint-pale':'#FFF0E0','--mint-paler':'#FFF8F0','--coral':'#DEB887','--coral-deep':'#A0522D' } },
+    berry:    { label:'Berry',     emoji:'🫐', vars:{ '--mint-deep':'#6A1B4D','--mint':'#9C2773','--mint-pale':'#F8E0F0','--mint-paler':'#FDF0F9','--coral':'#CE8FBB','--coral-deep':'#6A1B4D' } },
   };
 
   const FONTS = {
-    friendly: { label:'Friendly', sample:'Aa', family:"'Nunito', sans-serif",     url:null },
-    playful:  { label:'Playful',  sample:'Aa', family:"'Comic Neue', cursive",     url:'https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap' },
-    clear:    { label:'Clear',    sample:'Aa', family:"'Open Sans', sans-serif",   url:'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap' },
+    friendly:    { label:'Friendly',    sample:'Aa', family:"'Nunito', sans-serif",           url:null },
+    playful:     { label:'Playful',     sample:'Aa', family:"'Comic Neue', cursive",           url:'https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap' },
+    clear:       { label:'Clear',       sample:'Aa', family:"'Open Sans', sans-serif",         url:'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap' },
+    cursive:     { label:'Cursive',     sample:'Aa', family:"'Dancing Script', cursive",       url:'https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap' },
+    handwriting: { label:'Handwriting', sample:'Aa', family:"'Caveat', cursive",               url:'https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap' },
+    rounded:     { label:'Rounded',     sample:'Aa', family:"'Comfortaa', sans-serif",         url:'https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap' },
+    schoolbook:  { label:'Schoolbook',  sample:'Aa', family:"'Patrick Hand', cursive",         url:'https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap' },
   };
 
   const BUDDY_OPTIONS = [

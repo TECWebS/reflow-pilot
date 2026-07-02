@@ -46,6 +46,15 @@
   .calm-input:focus{ outline:none; border-color:var(--mint); }
   .calm-done{ display:none; text-align:center; }
 
+  /* Tube progress indicators */
+  .tube-row{ display:flex; gap:14px; justify-content:center; margin:14px 0 20px; }
+  .tube-vial{ display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .vial-body{ width:26px; height:88px; border:3px solid var(--mint-deep); border-radius:100px; position:relative; overflow:hidden; background:#fff; }
+  .vial-fill{ position:absolute; bottom:0; left:0; right:0; height:0%; border-radius:0 0 100px 100px; transition:height .6s ease, background .4s; background:linear-gradient(to top, var(--mint-deep), var(--mint)); }
+  .vial-fill.active{ height:100%; }
+  .vial-fill.done{ height:100%; background:linear-gradient(to top, var(--gold-deep), var(--gold)); }
+  .vial-num{ font-family:'Baloo 2'; font-weight:800; font-size:16px; color:var(--mint-deep); }
+
   /* Color Your Feelings */
   .color-layout{ display:grid; grid-template-columns:150px 1fr; gap:18px; align-items:start; }
   .color-legend{ display:flex; flex-direction:column; gap:6px; }
@@ -110,9 +119,9 @@
   </div>
 
   <div class="game-picker">
-    <button class="game-tab active" data-game="breathe"><iconify-icon icon="fluent-emoji:water-wave" width="28"></iconify-icon><h3>Breathing Buddy</h3><p>Slow breaths to calm down</p></button>
+    <button class="game-tab active" data-game="breathe"><iconify-icon icon="fluent-emoji:bubbles" width="28"></iconify-icon><h3>Breathing Buddy</h3><p>Slow breaths to calm down</p></button>
     <button class="game-tab" data-game="match"><iconify-icon icon="fluent-emoji:joker" width="28"></iconify-icon><h3>Feelings Match</h3><p>Match pairs by theme</p></button>
-    <button class="game-tab" data-game="calm"><iconify-icon icon="fluent-emoji:writing-hand" width="28"></iconify-icon><h3>Calm Counter</h3><p>5-4-3-2-1 grounding</p></button>
+    <button class="game-tab" data-game="calm"><iconify-icon icon="fluent-emoji:relieved-face" width="28"></iconify-icon><h3>Calm Counter</h3><p>5-4-3-2-1 grounding</p></button>
     <button class="game-tab" data-game="color"><iconify-icon icon="fluent-emoji:artist-palette" width="28"></iconify-icon><h3>Color Your Feelings</h3><p>Color today's card</p></button>
     <button class="game-tab" data-game="jeopardy"><iconify-icon icon="fluent-emoji:light-bulb" width="28"></iconify-icon><h3>Name That Feeling</h3><p>Quiz with real points</p></button>
   </div>
@@ -136,9 +145,16 @@
       <div style="text-align:center;margin-top:12px;"><button class="btn btn-secondary" id="matchReset">Shuffle again</button></div>
     </div>
 
-    <!-- CALM COUNTER (with typing) -->
     <div class="game-panel" id="panel-calm">
       <div class="calm-stage" id="calmStage">
+        <!-- Tube progress indicators — 5 vials for steps 5→1 -->
+        <div class="tube-row" id="calmTubes">
+          <div class="tube-vial"><div class="vial-body"><div class="vial-fill" id="vf-0"></div></div><div class="vial-num">5</div></div>
+          <div class="tube-vial"><div class="vial-body"><div class="vial-fill" id="vf-1"></div></div><div class="vial-num">4</div></div>
+          <div class="tube-vial"><div class="vial-body"><div class="vial-fill" id="vf-2"></div></div><div class="vial-num">3</div></div>
+          <div class="tube-vial"><div class="vial-body"><div class="vial-fill" id="vf-3"></div></div><div class="vial-num">2</div></div>
+          <div class="tube-vial"><div class="vial-body"><div class="vial-fill" id="vf-4"></div></div><div class="vial-num">1</div></div>
+        </div>
         <div class="calm-step-num" id="calmNum">5</div>
         <p class="calm-prompt" id="calmPrompt">What are 5 things you can see right now?</p>
         <textarea class="calm-input" id="calmInput" placeholder="Type what you notice here — take your time…"></textarea>
@@ -362,6 +378,13 @@ let calmIdx=0;
 const calmInput=document.getElementById('calmInput');
 const calmNext=document.getElementById('calmNext');
 
+function updateTubes(){
+  for(let i=0;i<5;i++){
+    const f=document.getElementById(`vf-${i}`);
+    if(!f) continue;
+    f.className='vial-fill'+(i<calmIdx?' done':i===calmIdx?' active':'');
+  }
+}
 function renderCalm(){
   const step=CALM_STEPS[calmIdx];
   document.getElementById('calmNum').textContent=step.n;
@@ -369,11 +392,14 @@ function renderCalm(){
   calmInput.placeholder=step.placeholder;
   calmInput.value='';
   calmNext.disabled=true;
+  updateTubes();
 }
 calmInput.addEventListener('input',()=>{ calmNext.disabled=calmInput.value.trim().length<3; });
 calmNext.addEventListener('click',()=>{
   calmIdx++;
   if(calmIdx>=CALM_STEPS.length){
+    // Fill all tubes gold when complete
+    for(let i=0;i<5;i++){ const f=document.getElementById(`vf-${i}`); if(f) f.className='vial-fill done'; }
     document.getElementById('calmStage').style.display='none';
     document.getElementById('calmDone').style.display='block';
     Swelli.updateLastEntry({activityDetail:'Completed 5-4-3-2-1 grounding'});
