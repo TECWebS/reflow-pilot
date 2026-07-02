@@ -440,6 +440,65 @@ const Swelli = (() => {
     if(session) applySettings(getSettings());
   });
 
+  // ---- Garden: 4-stage plant progression ----
+  // Every 4 streak days completes one plant: pot → seedling → growing → bloom.
+  // The bloom type rotates through 8 different plants across cycles.
+  function getGardenStage(dayIndex){
+    const BLOOM_TYPES = [
+      'fluent-emoji:sunflower','fluent-emoji:rose','fluent-emoji:tulip',
+      'fluent-emoji:cherry-blossom','fluent-emoji:cactus','fluent-emoji:four-leaf-clover',
+      'fluent-emoji:hibiscus','fluent-emoji:potted-plant',
+    ];
+    const pos = dayIndex % 4;
+    const cycle = Math.floor(dayIndex / 4);
+    const stages = [
+      'fluent-emoji:pot',
+      'fluent-emoji:seedling',
+      'fluent-emoji:herb',
+      BLOOM_TYPES[cycle % BLOOM_TYPES.length],
+    ];
+    return stages[pos];
+  }
+
+  // ---- Avatar pill: logout dropdown + buddy refresh ----
+  // Call once per page after DOM ready. Refreshes the buddy icon from the
+  // current session and adds a "Log out" dropdown to the avatar pill.
+  function setupAvatarPill(){
+    const pill = document.getElementById('avatarPill');
+    const dot = document.getElementById('avatarDot');
+    if(!pill) return;
+    const session = getSession();
+    if(session && dot){
+      const buddyObj = BUDDY_OPTIONS.find(b => b.id === session.buddy) || BUDDY_OPTIONS[0];
+      dot.innerHTML = emoji(buddyObj.icon, 26);
+    }
+    // Build dropdown once
+    if(!document.getElementById('avatarDropdown')){
+      const dd = document.createElement('div');
+      dd.id = 'avatarDropdown';
+      dd.style.cssText = `display:none;position:absolute;right:0;top:54px;background:#fff;
+        border-radius:14px;box-shadow:0 12px 32px -8px rgba(37,57,58,0.22);
+        padding:8px;min-width:160px;z-index:40;`;
+      dd.innerHTML = `
+        <a href="settings.html" style="display:flex;align-items:center;gap:8px;padding:10px 14px;font-weight:700;font-size:14px;color:var(--ink);border-radius:8px;text-decoration:none;">
+          <svg width="16" height="16" aria-hidden="true"><use href="icons.svg#icon-person"/></svg> Settings</a>
+        <button id="logoutBtn" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;font-weight:700;font-size:14px;color:#B23B2E;border-radius:8px;background:none;border:none;text-align:left;cursor:pointer;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg> Log out</button>`;
+      pill.style.position = 'relative';
+      pill.appendChild(dd);
+      pill.style.cursor = 'pointer';
+      pill.addEventListener('click', e => {
+        e.stopPropagation();
+        dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+      });
+      document.addEventListener('click', () => dd.style.display = 'none');
+      document.getElementById('logoutBtn')?.addEventListener('click', () => {
+        clearSession();
+        window.location.href = 'index.html';
+      });
+    }
+  }
+
   return {
     storageAvailable, icon, emoji, slugify,
     createSession, getSession, clearSession, requireSession,
@@ -448,6 +507,7 @@ const Swelli = (() => {
     scanText, checkAndFlag, addFlag, getFlags, getUnacknowledgedFlags, acknowledgeFlag, showSafetyOverlay,
     fetchRemoteFlags, acknowledgeRemoteFlag,
     getSettings, saveSettings, applySettings, hasCheckedInRecently, saveAndGoHome,
+    getGardenStage, setupAvatarPill,
     THEMES, FONTS, BUDDY_OPTIONS, BUDDY_ICONS, MOOD_ICONS, MOOD_LABELS, GROWTH_STAGES,
   };
 })();

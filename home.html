@@ -126,7 +126,8 @@
   if(session){
     document.getElementById('greeting').textContent = `Hi, ${session.name}!`;
     document.getElementById('pillName').textContent = session.name;
-    document.getElementById('avatarDot').innerHTML = Swelli.emoji(Swelli.BUDDY_ICONS[session.buddy] || 'fluent-emoji:fox', 28);
+    const buddyObj = Swelli.BUDDY_OPTIONS.find(b => b.id === session.buddy) || Swelli.BUDDY_OPTIONS[0];
+    document.getElementById('avatarDot').innerHTML = Swelli.emoji(buddyObj.icon, 26);
 
     if(session.isPreview){
       document.getElementById('previewBanner').style.display = 'flex';
@@ -152,7 +153,7 @@
         const span = document.createElement('span');
         span.className = 'sprout';
         span.style.animationDelay = (i*0.05)+'s';
-        span.innerHTML = Swelli.emoji(Swelli.GROWTH_STAGES[i % Swelli.GROWTH_STAGES.length], 38);
+        span.innerHTML = Swelli.emoji(Swelli.getGardenStage(i), 38);
         bed.appendChild(span);
       }
     }
@@ -177,6 +178,7 @@
       });
     }
   }
+  Swelli.setupAvatarPill();
 </script>
 </body>
 </html>

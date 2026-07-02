@@ -54,11 +54,15 @@
       <div>
         <span class="tool-label">Tools</span>
         <div class="tool-grid">
-          <button class="tool-btn active" data-tool="pencil" aria-label="Pencil"><svg class="icon"><use href="icons.svg#icon-pencil"/></svg></button>
+          <button class="tool-btn" data-tool="pencil" aria-label="Pencil"><svg class="icon"><use href="icons.svg#icon-pencil"/></svg></button>
           <button class="tool-btn" data-tool="line" aria-label="Line"><svg class="icon"><use href="icons.svg#icon-shape-line"/></svg></button>
           <button class="tool-btn" data-tool="rect" aria-label="Rectangle"><svg class="icon"><use href="icons.svg#icon-shape-rect"/></svg></button>
           <button class="tool-btn" data-tool="circle" aria-label="Circle"><svg class="icon"><use href="icons.svg#icon-shape-circle"/></svg></button>
           <button class="tool-btn" data-tool="eraser" aria-label="Eraser"><svg class="icon"><use href="icons.svg#icon-eraser"/></svg></button>
+          <button class="tool-btn" data-tool="move" aria-label="Move shape" style="font-size:10px;font-weight:800;flex-direction:column;gap:1px;">
+            <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M13 6v5h5V7l4 4-4 4v-4h-5v5h4l-4 4-4-4h4v-5H8v4l-4-4 4-4v4h5V6h-4l4-4 4 4h-4z"/></svg>
+            <span style="font-size:9px;">Move</span>
+          </button>
         </div>
       </div>
 
@@ -103,6 +107,7 @@
         <button class="btn btn-primary" id="saveDrawBtn">Save my drawing</button>
         <button class="btn btn-secondary" id="downloadBtn"><svg class="icon icon-sm"><use href="icons.svg#icon-download"/></svg>&nbsp; Download</button>
       </div>
+      <p style="font-size:12px;color:var(--ink-soft);font-weight:700;margin-top:8px;text-align:center;">Stamp a shape → it switches to Move tool so you can drag it right away</p>
     </div>
   </div>
 </div>
@@ -112,6 +117,10 @@
 <script src="data.js"></script>
 <script>
   Swelli.requireSession();
+  Swelli.setupAvatarPill();
+
+  // Set pencil as the default active tool
+  document.querySelector('.tool-btn[data-tool="pencil"]').classList.add('active');
 
   const colors = ['#25393A','#FF8A65','#F4B740','#3FB3A2','#6CC6FF','#C77DFF','#FF6B9A','#7BD389','#8B5E3C','#FFFFFF'];
   const swatchWrap = document.getElementById('swatches');
@@ -255,37 +264,181 @@
     ctx.fillRect(0,0,rect.width,rect.height);
   });
 
-  // ---- Shape stamps ----
-  const SHAPES = [
-    { label:'Heart', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.moveTo(x,y-s*0.3); ctx.bezierCurveTo(x,y-s*0.6,x+s*0.5,y-s*0.6,x+s*0.5,y-s*0.3); ctx.bezierCurveTo(x+s*0.5,y,x,y+s*0.4,x,y+s*0.4); ctx.bezierCurveTo(x,y+s*0.4,x-s*0.5,y,x-s*0.5,y-s*0.3); ctx.bezierCurveTo(x-s*0.5,y-s*0.6,x,y-s*0.6,x,y-s*0.3); } },
-    { label:'Star', fn:(ctx,x,y,s)=>{ const sp=5; ctx.beginPath(); for(let i=0;i<sp*2;i++){ const r=i%2===0?s:s*0.4; const a=Math.PI*i/sp-Math.PI/2; i===0?ctx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a)):ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a)); } ctx.closePath(); } },
-    { label:'Cloud', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.arc(x-s*0.2,y,s*0.35,Math.PI,0); ctx.arc(x+s*0.2,y,s*0.35,Math.PI,0); ctx.arc(x,y-s*0.2,s*0.3,Math.PI,0); ctx.arc(x-s*0.35,y,s*0.22,0,Math.PI); ctx.arc(x+s*0.35,y,s*0.22,0,Math.PI); ctx.closePath(); } },
-    { label:'Sun', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.arc(x,y,s*0.35,0,Math.PI*2); ctx.fill(); for(let i=0;i<8;i++){ const a=Math.PI*2*i/8; ctx.beginPath(); ctx.moveTo(x+s*0.42*Math.cos(a),y+s*0.42*Math.sin(a)); ctx.lineTo(x+s*0.6*Math.cos(a),y+s*0.6*Math.sin(a)); ctx.stroke(); } } },
-    { label:'Lightning', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.moveTo(x+s*0.1,y-s*0.5); ctx.lineTo(x-s*0.1,y); ctx.lineTo(x+s*0.08,y); ctx.lineTo(x-s*0.1,y+s*0.5); ctx.lineTo(x+s*0.25,y+s*0.05); ctx.lineTo(x+s*0.08,y+s*0.05); ctx.lineTo(x+s*0.3,y-s*0.5); ctx.closePath(); } },
-    { label:'Arrow', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.moveTo(x-s*0.5,y-s*0.12); ctx.lineTo(x+s*0.1,y-s*0.12); ctx.lineTo(x+s*0.1,y-s*0.3); ctx.lineTo(x+s*0.5,y); ctx.lineTo(x+s*0.1,y+s*0.3); ctx.lineTo(x+s*0.1,y+s*0.12); ctx.lineTo(x-s*0.5,y+s*0.12); ctx.closePath(); } },
-    { label:'Bubble', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.roundRect(x-s*0.5,y-s*0.4,s,s*0.6,s*0.15); ctx.fill(); ctx.beginPath(); ctx.moveTo(x-s*0.2,y+s*0.2); ctx.lineTo(x-s*0.35,y+s*0.45); ctx.lineTo(x,y+s*0.18); ctx.closePath(); } },
-    { label:'Diamond', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.moveTo(x,y-s*0.5); ctx.lineTo(x+s*0.4,y); ctx.lineTo(x,y+s*0.5); ctx.lineTo(x-s*0.4,y); ctx.closePath(); } },
-    { label:'Flower', fn:(ctx,x,y,s)=>{ for(let i=0;i<5;i++){ const a=Math.PI*2*i/5; const px=x+s*0.3*Math.cos(a), py=y+s*0.3*Math.sin(a); ctx.beginPath(); ctx.arc(px,py,s*0.22,0,Math.PI*2); ctx.fill(); } ctx.beginPath(); ctx.arc(x,y,s*0.2,0,Math.PI*2); } },
+  // ---- Moveable shape objects layer ----
+  // Shapes live as objects here so they can be selected and dragged.
+  // On save/download they get merged (flattened) onto the main canvas.
+  const shapeObjects = []; // { type, x, y, size, color }
+  let selectedShape = null;
+  let draggingShape = false;
+  let dragOffX = 0, dragOffY = 0;
+
+  function drawShapeObj(ctx2, obj){
+    ctx2.fillStyle = obj.color;
+    ctx2.strokeStyle = obj.color;
+    ctx2.lineWidth = 2;
+    ctx2.lineJoin = 'round';
+    const {x,y,size:s} = obj;
+    ctx2.beginPath();
+    switch(obj.type){
+      case 'heart':
+        ctx2.moveTo(x,y-s*0.3); ctx2.bezierCurveTo(x,y-s*0.6,x+s*0.5,y-s*0.6,x+s*0.5,y-s*0.3); ctx2.bezierCurveTo(x+s*0.5,y,x,y+s*0.4,x,y+s*0.4); ctx2.bezierCurveTo(x,y+s*0.4,x-s*0.5,y,x-s*0.5,y-s*0.3); ctx2.bezierCurveTo(x-s*0.5,y-s*0.6,x,y-s*0.6,x,y-s*0.3); break;
+      case 'star':
+        for(let i=0;i<10;i++){ const r=i%2===0?s:s*0.4,a=Math.PI*i/5-Math.PI/2; i===0?ctx2.moveTo(x+r*Math.cos(a),y+r*Math.sin(a)):ctx2.lineTo(x+r*Math.cos(a),y+r*Math.sin(a)); } break;
+      case 'circle':
+        ctx2.arc(x,y,s*0.5,0,Math.PI*2); break;
+      case 'rect':
+        ctx2.rect(x-s*0.5,y-s*0.4,s,s*0.8); break;
+      case 'triangle':
+        ctx2.moveTo(x,y-s*0.5); ctx2.lineTo(x+s*0.5,y+s*0.4); ctx2.lineTo(x-s*0.5,y+s*0.4); break;
+      case 'diamond':
+        ctx2.moveTo(x,y-s*0.5); ctx2.lineTo(x+s*0.4,y); ctx2.lineTo(x,y+s*0.5); ctx2.lineTo(x-s*0.4,y); break;
+      case 'sun':
+        ctx2.arc(x,y,s*0.32,0,Math.PI*2); ctx2.fill(); ctx2.beginPath();
+        for(let i=0;i<8;i++){ const a=Math.PI*2*i/8; ctx2.moveTo(x+s*0.38*Math.cos(a),y+s*0.38*Math.sin(a)); ctx2.lineTo(x+s*0.52*Math.cos(a),y+s*0.52*Math.sin(a)); }
+        ctx2.strokeStyle=obj.color; ctx2.lineWidth=3; ctx2.stroke(); return;
+      case 'arrow':
+        ctx2.moveTo(x-s*0.5,y-s*0.12); ctx2.lineTo(x+s*0.1,y-s*0.12); ctx2.lineTo(x+s*0.1,y-s*0.3); ctx2.lineTo(x+s*0.5,y); ctx2.lineTo(x+s*0.1,y+s*0.3); ctx2.lineTo(x+s*0.1,y+s*0.12); ctx2.lineTo(x-s*0.5,y+s*0.12); break;
+      case 'cloud':
+        ctx2.arc(x-s*0.18,y,s*0.3,Math.PI,0); ctx2.arc(x+s*0.18,y,s*0.3,Math.PI,0);
+        ctx2.arc(x,y-s*0.18,s*0.26,Math.PI,0); ctx2.arc(x-s*0.32,y,s*0.2,0,Math.PI); ctx2.arc(x+s*0.32,y,s*0.2,0,Math.PI); break;
+      case 'flower':
+        for(let i=0;i<5;i++){ const a=Math.PI*2*i/5; const px=x+s*0.28*Math.cos(a),py=y+s*0.28*Math.sin(a); ctx2.beginPath(); ctx2.arc(px,py,s*0.2,0,Math.PI*2); ctx2.fill(); }
+        ctx2.beginPath(); ctx2.arc(x,y,s*0.18,0,Math.PI*2); ctx2.fillStyle='#fff'; ctx2.fill(); return;
+    }
+    ctx2.closePath(); ctx2.fill();
+  }
+
+  // Overlay canvas for shape objects
+  const shapeCanvas = document.createElement('canvas');
+  shapeCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;border-radius:inherit;pointer-events:none;';
+  drawCanvas.parentElement.appendChild(shapeCanvas);
+  const sCtx = shapeCanvas.getContext('2d');
+
+  function resizeShapeCanvas(){
+    const rect = drawCanvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio||1;
+    shapeCanvas.width = rect.width*ratio; shapeCanvas.height = rect.height*ratio;
+    sCtx.scale(ratio,ratio);
+    renderShapes();
+  }
+  window.addEventListener('resize', resizeShapeCanvas);
+
+  function renderShapes(){
+    const rect = shapeCanvas.getBoundingClientRect();
+    sCtx.clearRect(0,0,rect.width*2,rect.height*2);
+    shapeObjects.forEach(obj=>{
+      drawShapeObj(sCtx, obj);
+      if(obj === selectedShape){
+        sCtx.strokeStyle='#25393A'; sCtx.lineWidth=2; sCtx.setLineDash([4,3]);
+        sCtx.strokeRect(obj.x-obj.size*0.55, obj.y-obj.size*0.55, obj.size*1.1, obj.size*1.1);
+        sCtx.setLineDash([]);
+      }
+    });
+  }
+
+  function posFromEvent(e, canvas){
+    const rect = canvas.getBoundingClientRect();
+    return { x:e.clientX-rect.left, y:e.clientY-rect.top };
+  }
+
+  function hitTest(x,y,obj){ return Math.abs(x-obj.x)<obj.size*0.55 && Math.abs(y-obj.y)<obj.size*0.55; }
+
+  // In move-tool mode, shape canvas handles pointer events
+  function enableShapeInteraction(){
+    shapeCanvas.style.pointerEvents='auto';
+    shapeCanvas.addEventListener('pointerdown', shapePointerDown);
+  }
+  function disableShapeInteraction(){
+    shapeCanvas.style.pointerEvents='none';
+    shapeCanvas.removeEventListener('pointerdown', shapePointerDown);
+  }
+
+  function shapePointerDown(e){
+    const p = posFromEvent(e, shapeCanvas);
+    let hit = null;
+    for(let i=shapeObjects.length-1;i>=0;i--){ if(hitTest(p.x,p.y,shapeObjects[i])){ hit=shapeObjects[i]; break; } }
+    selectedShape = hit;
+    renderShapes();
+    if(hit){
+      draggingShape=true; dragOffX=p.x-hit.x; dragOffY=p.y-hit.y;
+      shapeCanvas.setPointerCapture(e.pointerId);
+      shapeCanvas.addEventListener('pointermove', shapeDrag);
+      shapeCanvas.addEventListener('pointerup', shapePointerUp);
+    }
+  }
+  function shapeDrag(e){
+    if(!draggingShape||!selectedShape) return;
+    const p=posFromEvent(e,shapeCanvas);
+    selectedShape.x=p.x-dragOffX; selectedShape.y=p.y-dragOffY;
+    renderShapes();
+  }
+  function shapePointerUp(){
+    draggingShape=false;
+    shapeCanvas.removeEventListener('pointermove',shapeDrag);
+    shapeCanvas.removeEventListener('pointerup',shapePointerUp);
+  }
+
+  function flattenShapesToCanvas(){
+    const rect = drawCanvas.getBoundingClientRect();
+    shapeObjects.forEach(obj=>drawShapeObj(ctx,obj));
+    shapeObjects.length=0; selectedShape=null;
+    sCtx.clearRect(0,0,rect.width*2,rect.height*2);
+  }
+
+  // Track previous tool to re-enable freehand on switch
+  let prevTool = 'pencil';
+  document.querySelectorAll('.tool-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      tool=btn.dataset.tool;
+      document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      fillRow.style.display=(tool==='rect'||tool==='circle')?'flex':'none';
+      if(tool==='move'){ enableShapeInteraction(); }
+      else { disableShapeInteraction(); }
+    });
+  });
+
+  // ---- Shape stamps — labeled grid ----
+  const SHAPES_DEFS = [
+    { id:'heart',    label:'Heart'    },
+    { id:'star',     label:'Star'     },
+    { id:'circle',   label:'Circle'   },
+    { id:'rect',     label:'Square'   },
+    { id:'triangle', label:'Triangle' },
+    { id:'diamond',  label:'Diamond'  },
+    { id:'sun',      label:'Sun'      },
+    { id:'arrow',    label:'Arrow'    },
+    { id:'cloud',    label:'Cloud'    },
+    { id:'flower',   label:'Flower'   },
   ];
 
   const stampWrap = document.getElementById('shapeStamps');
-  SHAPES.forEach(sh=>{
-    const b = document.createElement('button');
-    b.className = 'tool-btn';
-    b.title = sh.label;
-    b.textContent = sh.label[0];
-    b.style.fontSize = '11px'; b.style.fontWeight = '800';
-    b.addEventListener('click', ()=>{
-      const rect = drawCanvas.getBoundingClientRect();
-      const cx = rect.width / 2, cy = rect.height / 2, size = Math.min(rect.width, rect.height) * 0.18;
-      ctx.fillStyle = currentColor; ctx.strokeStyle = currentColor;
-      ctx.lineWidth = 3; ctx.lineJoin = 'round';
-      ctx.beginPath();
-      sh.fn(ctx, cx, cy, size);
-      ctx.fill();
+  SHAPES_DEFS.forEach(sh=>{
+    const b=document.createElement('button');
+    b.className='tool-btn';
+    b.style.cssText='flex-direction:column;gap:2px;padding:8px 4px;font-size:10px;font-weight:800;';
+    // Tiny canvas preview
+    const miniC=document.createElement('canvas');
+    miniC.width=28; miniC.height=28; miniC.style.display='block';
+    const mCtx=miniC.getContext('2d');
+    drawShapeObj(mCtx,{type:sh.id,x:14,y:14,size:22,color:'#3FB3A2'});
+    b.appendChild(miniC);
+    b.appendChild(document.createTextNode(sh.label));
+    b.addEventListener('click',()=>{
+      const rect=drawCanvas.getBoundingClientRect();
+      const size=Math.min(rect.width,rect.height)*0.16;
+      shapeObjects.push({type:sh.id,x:rect.width/2,y:rect.height/2,size,color:currentColor});
+      renderShapes();
+      // Auto-switch to move tool so they can drag it right away
+      tool='move';
+      document.querySelectorAll('.tool-btn[data-tool]').forEach(t=>t.classList.remove('active'));
+      document.querySelector('.tool-btn[data-tool="move"]')?.classList.add('active');
+      enableShapeInteraction();
     });
     stampWrap.appendChild(b);
   });
+
+  resizeShapeCanvas();
 
   // ---- Fluent Emoji stickers (stamped via offscreen canvas) ----
   const STICKERS = [
@@ -319,10 +472,12 @@
 
   const toast = document.getElementById('toast');
   document.getElementById('saveDrawBtn').addEventListener('click', ()=>{
+    flattenShapesToCanvas();
     Swelli.saveAndGoHome({ activity:'drawing', activityDetail:'Drew a picture' }, toast);
   });
 
   document.getElementById('downloadBtn').addEventListener('click', ()=>{
+    flattenShapesToCanvas();
     const link = document.createElement('a');
     link.download = 'my-swelli-drawing.png';
     link.href = drawCanvas.toDataURL('image/png');

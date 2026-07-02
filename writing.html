@@ -76,16 +76,37 @@
 <script src="data.js"></script>
 <script>
   Swelli.requireSession();
+  Swelli.setupAvatarPill();
 
   const prompts = [
     "If today were a weather forecast, what would it say?",
     "What's one thing that made you smile this week?",
     "If your feeling today was an animal, what would it be and why?",
-    "Write about a time you felt brave.",
+    "Write about a time you felt really brave.",
     "What's something you wish a grown-up understood about you?",
     "Describe your perfect calm-down spot.",
+    "If you could have a superpower that helped people feel better, what would it be?",
+    "Write a letter to your future self. What do you want them to know?",
+    "What's something you're really proud of — no matter how small?",
+    "Describe the best day you've ever had, step by step.",
+    "If your feelings could talk, what would they say right now?",
+    "Write about a person who always makes you feel safe.",
+    "What's one thing you're really good at that maybe no one notices?",
+    "Imagine a place where you feel totally at peace. Describe it.",
+    "What does kindness look like to you?",
+    "If you could change one thing about your day, what would it be and why?",
+    "Write about something you're looking forward to.",
+    "What song matches your mood today? Describe why.",
+    "Who is someone who helped you recently, and what did they do?",
+    "If your heart had a color today, what would it be and why?",
+    "What's something that felt hard but you did it anyway?",
+    "Write about a time you helped someone else. How did it feel?",
+    "If you could send a message to anyone in the world right now, who would it be and what would you say?",
+    "What's one thing that was better today than yesterday?",
   ];
   const promptEl = document.getElementById('promptText');
+  // Start with a random prompt
+  promptEl.textContent = prompts[Math.floor(Math.random() * prompts.length)];
   document.getElementById('newPrompt').addEventListener('click', ()=>{
     promptEl.textContent = prompts[Math.floor(Math.random()*prompts.length)];
   });
