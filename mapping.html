@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reflow — My Map</title>
+<title>Swelli — My Map</title>
 <link rel="stylesheet" href="style.css">
 <style>
   /* Step 1 - feeling picker */
@@ -200,26 +200,16 @@
 Swelli.requireSession();
 Swelli.setupAvatarPill();
 
-const FEELINGS = [
-  {id:'happy',   label:'Happy'  },
-  {id:'laughing',label:'Silly'  },
-  {id:'tired',   label:'Tired'  },
-  {id:'angry',   label:'Angry'  },
-  {id:'sad',     label:'Sad'    },
-  {id:'anxious', label:'Worried'},
-];
-
-// Suggested default valence per feeling (can be overridden by student)
-const DEFAULT_VALENCE = {
-  happy:'pos', laughing:'pos', tired:'neg', angry:'neg', sad:'neg', anxious:'neg',
-};
-
+const ED = Swelli.EMOTION_DATA;
+const FEELINGS = Object.entries(ED).map(([id,em])=>({ id, label:em.label }));
+const DEFAULT_VALENCE = { happy:'pos', surprise:'pos', sad:'neg', fear:'neg', disgust:'neg', anger:'neg' };
 let chosenFeeling = null;
 let currentValence = 'neg';
 
 // ---- Step 1: feeling picker ----
 const grid = document.getElementById('feelingGrid');
 FEELINGS.forEach(f=>{
+  const em = ED[f.id];
   const b = document.createElement('button');
   b.className = 'pick-card';
   b.innerHTML = Swelli.emoji(Swelli.MOOD_ICONS[f.id], 36) + `<span style="font-size:12px;">${f.label}</span>`;

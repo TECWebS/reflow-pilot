@@ -3,43 +3,106 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reflow — Check In</title>
+<title>Swelli — Check In</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  .already-checked{
-    text-align:center; padding: 40px 20px; max-width: 480px; margin:0 auto;
+  /* Phase 1 — emotion card grid */
+  .emotion-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:18px 0;
   }
+  .emotion-card{
+    border-radius:var(--radius-lg); padding:22px 16px 18px; text-align:center;
+    border:3px solid transparent; display:flex; flex-direction:column; align-items:center; gap:8px;
+    transition:transform .12s, border-color .12s, box-shadow .12s;
+    color:#fff; position:relative; overflow:hidden;
+  }
+  .emotion-card:hover{ transform:translateY(-3px); box-shadow:0 16px 32px -10px rgba(0,0,0,0.28); }
+  .emotion-card.selected{ border-color:#fff; box-shadow:0 0 0 3px rgba(255,255,255,0.5); }
+  .emotion-card .ename{
+    font-family:'Baloo 2'; font-weight:800; font-size:22px; color:#fff; line-height:1;
+  }
+  .emotion-card .edesc{
+    font-size:11px; font-weight:600; color:rgba(255,255,255,0.88); line-height:1.3; margin:0;
+  }
+
+  /* Phase 2 — sub-emotions */
+  .phase2-banner{
+    border-radius:var(--radius-lg); padding:16px 20px; display:flex; align-items:center; gap:14px;
+    color:#fff; margin-bottom:18px;
+  }
+  .phase2-banner .banner-emoji{ font-size:38px; flex-shrink:0; }
+  .phase2-banner .banner-label{ font-family:'Baloo 2'; font-weight:800; font-size:20px; }
+  .phase2-banner .banner-desc{ font-size:13px; font-weight:600; opacity:0.92; }
+
+  .sub-label{ font-weight:800; font-size:15px; margin:0 0 12px; }
+
+  .sub-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:14px; }
+  .sub-btn{
+    border-radius:999px; padding:12px 16px; font-weight:800; font-size:14px;
+    border:3px solid transparent; text-align:center; line-height:1.2; transition:transform .1s,border-color .12s;
+    color:#fff;
+  }
+  .sub-btn:hover{ transform:scale(1.03); }
+  .sub-btn.selected{ border-color:#fff; box-shadow:0 0 0 2px rgba(0,0,0,0.2); }
+
+  /* Definition reveal card */
+  .def-card{
+    border-radius:var(--radius-md); padding:14px 16px; margin-bottom:16px;
+    display:none; border-left:4px solid;
+  }
+  .def-card.show{ display:block; }
+  .def-card .def-word{ font-weight:800; font-size:14px; margin-bottom:4px; }
+  .def-card .def-text{ font-size:13px; font-weight:600; line-height:1.5; margin:0; }
+
+  /* Required textarea */
+  .write-section{ margin-top:6px; }
+  .write-label{ font-weight:800; font-size:14px; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+  .write-required{ background:var(--coral); color:#fff; font-size:10px; font-weight:800; padding:2px 7px; border-radius:999px; }
+  .write-helper{ font-size:12px; font-weight:700; color:var(--ink-soft); margin:0 0 8px; }
+  .write-counter{ font-size:12px; font-weight:700; color:var(--ink-soft); text-align:right; margin-top:4px; }
+  .write-counter.good{ color:var(--mint-deep); }
+  textarea.write-box{
+    width:100%; min-height:110px; border-radius:var(--radius-md); border:2px solid var(--line);
+    padding:12px 14px; font-family:'Nunito'; font-size:15px; font-weight:600; resize:vertical;
+    background:var(--cream);
+  }
+  textarea.write-box:focus{ outline:none; border-color:var(--mint); background:#fff; }
+
+  /* Plan / counselor card */
+  .plan-card{ background:#FFF3E2; border-radius:var(--radius-lg); padding:18px 22px; margin-top:18px; text-align:left; border:2px solid #FBDFAF; }
+  .plan-card .plan-head{ display:flex; align-items:center; gap:10px; font-weight:800; color:#9A6B12; margin-bottom:4px; }
+  .plan-card p{ margin:4px 0 12px; font-size:14px; color:#7A5A18; font-weight:600; }
+  .plan-card textarea{ width:100%; min-height:80px; border-radius:var(--radius-sm); border:2px solid #FBDFAF; padding:12px 14px; font-family:'Nunito'; font-weight:600; font-size:14px; background:#fff; resize:vertical; }
+  .plan-card textarea:focus{ outline:none; border-color:#E0A22A; }
+  .switch-row{ display:flex; align-items:center; gap:10px; }
+  .mini-switch{ width:40px; height:22px; border-radius:999px; background:#FBDFAF; position:relative; border:none; padding:0; flex-shrink:0; }
+  .mini-switch .knob{ position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .15s; }
+  .mini-switch.checked{ background:#E0A22A; }
+  .mini-switch.checked .knob{ left:20px; }
+
+  .already-checked{ text-align:center; padding:40px 20px; max-width:480px; margin:0 auto; }
   .already-checked .big-icon{ font-size:64px; margin-bottom:16px; }
   .already-checked h1{ font-size:24px; margin-bottom:8px; }
   .already-checked p{ color:var(--ink-soft); font-weight:700; margin:0 0 24px; }
-  .checkin-card h1{ font-size: 24px; margin-bottom: 4px; }
-  .checkin-card .sub{ color: var(--ink-soft); font-weight:700; margin: 0 0 6px; }
-  textarea{
-    width:100%; min-height: 100px; border-radius: var(--radius-md); border:2px solid var(--line);
-    padding: 14px 16px; font-family:'Nunito'; font-size:15px; font-weight:600; resize: vertical;
-    background: var(--cream); margin-top: 6px;
+
+  @media (max-width:480px){
+    .emotion-card .ename{ font-size:18px; }
+    .sub-btn{ font-size:12px; padding:10px 10px; }
   }
-  textarea:focus{ outline:none; border-color: var(--mint); background:#fff; }
-  .switch-row{ display:flex; align-items:center; gap:10px; justify-content:flex-start; }
-  .mini-switch{ width:40px; height:22px; border-radius:999px; background:#FBDFAF; position:relative; border:none; padding:0; flex-shrink:0; }
-  .mini-switch .knob{ position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition: left .15s; }
-  .mini-switch.checked{ background:#E0A22A; }
-  .mini-switch.checked .knob{ left:20px; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <button class="back" onclick="location.href='home.html'" aria-label="Back to home">←</button>
+  <button class="back" id="backBtn" aria-label="Back" style="display:none;">←</button>
   <div class="brand"><span class="brand-name">Swelli for Education</span></div>
-  <nav>
-    <a href="home.html">Home</a>
-    <a href="settings.html">Settings</a>
-  </nav>
+  <nav><a href="home.html">Home</a><a href="settings.html">Settings</a></nav>
+  <span class="avatar-pill" id="avatarPill"><span class="dot" id="avatarDot"></span><span id="pillName">Me</span></span>
 </div>
 
 <div class="page narrow">
 
+  <!-- Already checked in screen -->
   <div class="already-checked" id="alreadyChecked" style="display:none;">
     <iconify-icon icon="fluent-emoji:seedling" width="64" style="display:block;margin:0 auto 16px;"></iconify-icon>
     <h1 class="display" id="alreadyTitle">You've already checked in this week!</h1>
@@ -47,116 +110,236 @@
     <a class="btn btn-primary" href="home.html">Go to my garden →</a>
   </div>
 
-  <div class="card checkin-card" id="checkinCard">
-    <h1 class="display">How are you feeling today? 🌤️</h1>
-    <p class="sub">Tap the face that matches your mood.</p>
+  <!-- Phase 1 — core emotion picker -->
+  <div id="phase1" style="display:none;">
+    <h1 class="display" style="margin-bottom:4px;">How are you feeling today?</h1>
+    <p style="color:var(--ink-soft);font-weight:700;margin:0 0 4px;">Pick the emotion that matches you right now.</p>
+    <div class="emotion-grid" id="emotionGrid"></div>
+  </div>
 
-    <!-- Mood faces use Fluent Emoji via Iconify (loaded by data.js automatically) -->
-    <div class="mood-grid" id="moodGrid">
-      <button class="mood-btn" data-mood="happy"><iconify-icon icon="fluent-emoji:smiling-face-with-smiling-eyes" width="40"></iconify-icon><span class="label">Happy</span></button>
-      <button class="mood-btn" data-mood="laughing"><iconify-icon icon="fluent-emoji:face-with-tears-of-joy" width="40"></iconify-icon><span class="label">Silly</span></button>
-      <button class="mood-btn" data-mood="tired"><iconify-icon icon="fluent-emoji:sleepy-face" width="40"></iconify-icon><span class="label">Tired</span></button>
-      <button class="mood-btn" data-mood="angry"><iconify-icon icon="fluent-emoji:pouting-face" width="40"></iconify-icon><span class="label">Angry</span></button>
-      <button class="mood-btn" data-mood="sad"><iconify-icon icon="fluent-emoji:crying-face" width="40"></iconify-icon><span class="label">Sad</span></button>
-      <button class="mood-btn" data-mood="anxious"><iconify-icon icon="fluent-emoji:worried-face" width="40"></iconify-icon><span class="label">Worried</span></button>
+  <!-- Phase 2 — sub-emotion + write -->
+  <div id="phase2" style="display:none;">
+    <div class="phase2-banner" id="phase2Banner">
+      <span class="banner-emoji" id="bannerEmoji"></span>
+      <div>
+        <div class="banner-label" id="bannerLabel"></div>
+        <div class="banner-desc" id="bannerDesc"></div>
+      </div>
     </div>
 
-    <label for="note" style="display:block; font-weight:800; font-size:14px; text-align:left; margin-bottom:0;">Tell us why you feel this way (optional)</label>
-    <textarea id="note" placeholder="You can write or just leave this blank…"></textarea>
+    <p class="sub-label">Be more specific — which version feels closest to you?</p>
 
+    <div class="sub-grid" id="subGrid"></div>
+
+    <!-- Definition reveal card -->
+    <div class="def-card" id="defCard">
+      <div class="def-word" id="defWord"></div>
+      <p class="def-text" id="defText"></p>
+    </div>
+
+    <!-- Required writing area -->
+    <div class="write-section">
+      <div class="write-label">
+        Tell us about it <span class="write-required">required</span>
+      </div>
+      <p class="write-helper" id="writeHelper">Use your vocabulary word in a sentence! Try starting with: "I feel this way because…"</p>
+      <textarea class="write-box" id="writeBox" placeholder="Write at least one sentence here…"></textarea>
+      <div class="write-counter" id="writeCounter">0 characters</div>
+    </div>
+
+    <!-- Plan / counselor note -->
     <div class="plan-card" id="planCard" style="display:none;">
       <div class="plan-head">
         <svg class="icon"><use href="icons.svg#icon-flag"/></svg>
         A note for your counselor
       </div>
-      <p>You can send a private note straight to <span id="counselorName">your counselor</span> right now if you'd like to.</p>
+      <p>You can send a private note to <span id="counselorName">your counselor</span> right now.</p>
       <div class="switch-row">
         <button type="button" class="mini-switch" id="planSwitch" role="switch" aria-checked="false"><span class="knob"></span></button>
-        <label for="planSwitch">Yes, I'd like to send a note</label>
+        <label>Yes, I'd like to send a note</label>
       </div>
-      <textarea id="counselorNote" style="display:none; margin-top:12px;" placeholder="What's going on? This goes straight to your counselor."></textarea>
+      <textarea id="counselorNote" style="display:none;margin-top:12px;" placeholder="What's going on? This goes straight to your counselor."></textarea>
     </div>
 
-    <button class="btn btn-primary btn-block" id="nextBtn" style="margin-top:20px;" disabled>Next →</button>
+    <div style="display:flex;gap:10px;margin-top:20px;align-items:center;flex-wrap:wrap;">
+      <button class="btn btn-ghost" id="backToPhase1">← Different emotion</button>
+      <button class="btn btn-primary" id="nextBtn" disabled>Next →</button>
+    </div>
   </div>
+
 </div>
 
 <script src="data.js"></script>
 <script>
-  const session = Swelli.requireSession();
+const session = Swelli.requireSession();
+Swelli.setupAvatarPill();
 
-  // Block repeat check-ins based on frequency setting
-  if(session && Swelli.hasCheckedInRecently()){
-    const settings = Swelli.getSettings();
-    const isDaily = settings.checkInFrequency === 'daily';
-    document.getElementById('checkinCard').style.display = 'none';
-    document.getElementById('alreadyChecked').style.display = 'block';
-    document.getElementById('alreadyTitle').textContent = isDaily
-      ? "You've already checked in today!"
-      : "You've already checked in this week!";
-    document.getElementById('alreadyMsg').textContent = isDaily
-      ? "Come back tomorrow to plant your next sprout."
-      : "Come back next week to plant your next sprout.";
-  }
+// ---- Check-in frequency block ----
+if(session && Swelli.hasCheckedInRecently()){
+  const settings = Swelli.getSettings();
+  const isDaily = settings.checkInFrequency === 'daily';
+  document.getElementById('alreadyChecked').style.display='block';
+  document.getElementById('alreadyTitle').textContent = isDaily
+    ? "You've already checked in today!" : "You've already checked in this week!";
+  document.getElementById('alreadyMsg').textContent = isDaily
+    ? "Come back tomorrow to plant your next sprout."
+    : "Come back next week to plant your next sprout.";
+} else {
+  document.getElementById('phase1').style.display='block';
+}
 
+const ED = Swelli.EMOTION_DATA;
+let chosenEmotion = null;
+let chosenSub = null;
+const MIN_CHARS = 20;
+
+// ---- Phase 1: emotion cards ----
+const emotionGrid = document.getElementById('emotionGrid');
+Object.entries(ED).forEach(([id, em])=>{
+  const card = document.createElement('button');
+  card.className = 'emotion-card';
+  card.style.background = em.color;
+  card.innerHTML = `
+    <span class="ename">${em.label}</span>
+    ${Swelli.emoji(em.icon, 52)}
+    <p class="edesc">${em.desc}</p>`;
+  card.addEventListener('click', ()=> openPhase2(id, em));
+  emotionGrid.appendChild(card);
+});
+
+// ---- Phase 2 setup ----
+function openPhase2(id, em){
+  chosenEmotion = { id, ...em };
+  chosenSub = null;
+  document.getElementById('phase1').style.display='none';
+  document.getElementById('phase2').style.display='block';
+  document.getElementById('backBtn').style.display='flex';
+
+  // Banner
+  const banner = document.getElementById('phase2Banner');
+  banner.style.background = em.color;
+  document.getElementById('bannerEmoji').innerHTML = Swelli.emoji(em.icon, 38);
+  document.getElementById('bannerLabel').textContent = em.label;
+  document.getElementById('bannerDesc').textContent = em.desc;
+
+  // Definition card colors
+  const defCard = document.getElementById('defCard');
+  defCard.style.background = em.pale;
+  defCard.style.borderLeftColor = em.color;
+  document.getElementById('defWord').style.color = em.color;
+
+  // Sub-emotion buttons
+  const subGrid = document.getElementById('subGrid');
+  subGrid.innerHTML='';
+  em.sub.forEach(sub=>{
+    const btn = document.createElement('button');
+    btn.className='sub-btn';
+    btn.textContent = sub.label;
+    btn.style.background = em.color;
+    btn.style.opacity='0.88';
+    btn.addEventListener('click', ()=> selectSub(sub, btn, em));
+    subGrid.appendChild(btn);
+  });
+
+  // Write helper with vocabulary hint
+  document.getElementById('writeHelper').textContent =
+    `Use one of your vocabulary words in a sentence! Try: "I feel ${em.label.toLowerCase()} right now because…"`;
+
+  // Reset
+  document.getElementById('writeBox').value='';
+  document.getElementById('writeCounter').textContent='0 characters';
+  document.getElementById('writeCounter').classList.remove('good');
+  defCard.classList.remove('show');
+  document.getElementById('nextBtn').disabled=true;
+
+  // Plan card
   if(session && session.hasPlan){
-    document.getElementById('planCard').style.display = 'block';
-    document.getElementById('counselorName').textContent = 'Ms. Alvarez';
+    document.getElementById('planCard').style.display='block';
+    document.getElementById('counselorName').textContent='Ms. Alvarez';
   }
+}
 
-  const planSwitch = document.getElementById('planSwitch');
-  const counselorNote = document.getElementById('counselorNote');
-  planSwitch.addEventListener('click', ()=>{
-    const checked = !planSwitch.classList.contains('checked');
-    planSwitch.classList.toggle('checked', checked);
-    planSwitch.setAttribute('aria-checked', String(checked));
-    counselorNote.style.display = checked ? 'block' : 'none';
+function selectSub(sub, btn, em){
+  chosenSub = sub;
+  // Highlight selected
+  document.querySelectorAll('.sub-btn').forEach(b=>{ b.classList.remove('selected'); b.style.opacity='0.75'; });
+  btn.classList.add('selected');
+  btn.style.opacity='1';
+  // Reveal definition
+  document.getElementById('defWord').textContent = sub.label;
+  document.getElementById('defText').textContent = sub.def;
+  document.getElementById('defCard').classList.add('show');
+  // Update helper to use the specific word
+  document.getElementById('writeHelper').textContent =
+    `Try writing: "I feel ${sub.label.split('&')[0].trim().toLowerCase()} right now because…"`;
+  checkReady();
+}
+
+// ---- Required write box ----
+const writeBox = document.getElementById('writeBox');
+const counter = document.getElementById('writeCounter');
+writeBox.addEventListener('input', ()=>{
+  const len = writeBox.value.trim().length;
+  counter.textContent = `${len} character${len===1?'':'s'}`;
+  counter.classList.toggle('good', len >= MIN_CHARS);
+  checkReady();
+});
+
+function checkReady(){
+  document.getElementById('nextBtn').disabled = !(chosenSub && writeBox.value.trim().length >= MIN_CHARS);
+}
+
+// ---- Back buttons ----
+document.getElementById('backToPhase1').addEventListener('click', ()=>{
+  document.getElementById('phase2').style.display='none';
+  document.getElementById('phase1').style.display='block';
+  document.getElementById('backBtn').style.display='none';
+});
+document.getElementById('backBtn').addEventListener('click', ()=>{
+  document.getElementById('phase2').style.display='none';
+  document.getElementById('phase1').style.display='block';
+  document.getElementById('backBtn').style.display='none';
+});
+
+// ---- Plan / counselor note toggle ----
+const planSwitch = document.getElementById('planSwitch');
+const counselorNote = document.getElementById('counselorNote');
+planSwitch.addEventListener('click', ()=>{
+  const checked = !planSwitch.classList.contains('checked');
+  planSwitch.classList.toggle('checked', checked);
+  planSwitch.setAttribute('aria-checked', String(checked));
+  counselorNote.style.display = checked ? 'block' : 'none';
+});
+
+// ---- Submit ----
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  if(!chosenSub || !session) return;
+  const note = writeBox.value.trim();
+  const sendToCounselor = planSwitch.classList.contains('checked');
+  const counselorNoteText = counselorNote.value.trim();
+
+  Swelli.addEntry({
+    mood: chosenEmotion.id,
+    subMood: chosenSub.id,
+    subMoodLabel: chosenSub.label,
+    note,
+    forCounselor: sendToCounselor,
+    counselorNote: sendToCounselor ? counselorNoteText : '',
   });
 
-  let selected = null;
-  document.querySelectorAll('.mood-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
-      btn.classList.add('selected');
-      selected = btn.dataset.mood;
-      document.getElementById('nextBtn').disabled = false;
-    });
-  });
-
-  document.getElementById('nextBtn').addEventListener('click', ()=>{
-    if(!selected || !session) return;
-    const note = document.getElementById('note').value.trim();
-    const sendToCounselor = planSwitch.classList.contains('checked');
-    const counselorNoteText = counselorNote.value.trim();
-
-    Swelli.addEntry({
-      mood: selected,
-      note,
-      forCounselor: sendToCounselor,
-      counselorNote: sendToCounselor ? counselorNoteText : '',
-    });
-
-    // Safety check: scans the note (and counselor note, if sent) for
-    // language suggesting self-harm, abuse, eating disorder, or similar
-    // concerns. See data.js for important caveats about this scanner.
-    const hits = [
-      ...Swelli.checkAndFlag(note, 'Check-in note'),
-      ...(sendToCounselor ? Swelli.checkAndFlag(counselorNoteText, 'Counselor note') : []),
-    ];
-
-    const goToUnwind = () => { window.location.href = 'unwind.html'; };
-
-    if(hits.length){
-      Swelli.updateLastEntry({ flagged: true, flagCategories: hits.map(h => h.category) });
-      Swelli.showSafetyOverlay(hits, goToUnwind);
-    } else {
-      goToUnwind();
-    }
-
-    // Production note: actually delivering the counselor note (e.g. an
-    // email/Sheets row your counselor sees) needs a backend call here —
-    // a natural fit for your existing Apps Script pattern.
-  });
+  // Safety scan
+  const hits = [
+    ...Swelli.checkAndFlag(note, 'Check-in'),
+    ...(sendToCounselor ? Swelli.checkAndFlag(counselorNoteText, 'Counselor note') : []),
+  ];
+  const goNext = ()=> window.location.href='unwind.html';
+  if(hits.length){
+    Swelli.updateLastEntry({ flagged:true, flagCategories:hits.map(h=>h.category) });
+    Swelli.showSafetyOverlay(hits, goNext);
+  } else {
+    goNext();
+  }
+});
 </script>
 </body>
 </html>

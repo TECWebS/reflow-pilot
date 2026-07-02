@@ -56,25 +56,87 @@ const Swelli = (() => {
   }
 
 
-  // Fluent Emoji icon names (via Iconify fluent-emoji pack, MIT licensed, by Microsoft)
+  // ---- Core 6 emotions (Ekman-based) + sub-emotions with definitions ----
+  const EMOTION_DATA = {
+    happy: {
+      label:'Happy', icon:'fluent-emoji:smiling-face-with-smiling-eyes',
+      desc:'A feeling of joy, satisfaction, and well-being.',
+      color:'#2E6FBF', pale:'#D6EAF8',
+      sub:[
+        { id:'joy',         label:'Joy & Delight',              def:'Sudden, momentary bursts of great pleasure — like a surprise that makes your whole face light up.' },
+        { id:'contentment', label:'Contentment & Satisfaction', def:'A deep, peaceful feeling of being settled and gratified — like everything is just right.' },
+        { id:'elation',     label:'Elation & Euphoria',         def:'Overwhelming, intense excitement — the kind of rush you feel right after something amazing happens.' },
+        { id:'bliss',       label:'Bliss & Felicity',           def:'Supreme, perfect, heavenly happiness — the kind of joy that fills you all the way up inside.' },
+      ],
+    },
+    sad: {
+      label:'Sad', icon:'fluent-emoji:crying-face',
+      desc:'A feeling of loss, grief, or quiet disappointment.',
+      color:'#1A5C8A', pale:'#D4E8F5',
+      sub:[
+        { id:'grief',          label:'Grief & Sorrow',           def:'A deep sadness that usually comes from losing someone or something that really mattered to you.' },
+        { id:'loneliness',     label:'Loneliness & Isolation',   def:'Feeling alone, left out, or disconnected — like no one really understands what you\'re going through.' },
+        { id:'disappointment', label:'Disappointment & Regret',  def:'The quiet ache you feel when things don\'t go the way you hoped or expected they would.' },
+        { id:'melancholy',     label:'Melancholy & Gloom',       def:'A gentle, lingering sadness that hangs around — sometimes without a completely clear reason.' },
+      ],
+    },
+    fear: {
+      label:'Fear', icon:'fluent-emoji:fearful-face',
+      desc:'A crucial survival instinct that alerts us to danger.',
+      color:'#6A1B9A', pale:'#EDE0F9',
+      sub:[
+        { id:'anxiety',     label:'Anxiety & Worry',             def:'A nervous, uneasy feeling about something that might happen — your mind running through "what ifs."' },
+        { id:'dread',       label:'Dread & Terror',              def:'An overwhelming, intense fear of something specific — the kind that makes you want to freeze or run.' },
+        { id:'nervousness', label:'Nervousness & Apprehension',  def:'A mild, jittery feeling before something uncertain — like butterflies right before something big.' },
+        { id:'panic',       label:'Panic & Alarm',               def:'A sudden rush of fear that can feel hard to control, even when you know deep down you\'re safe.' },
+      ],
+    },
+    disgust: {
+      label:'Disgust', icon:'fluent-emoji:nauseated-face',
+      desc:'A natural reaction to things that might harm us.',
+      color:'#4A7C1F', pale:'#DCEDC8',
+      sub:[
+        { id:'revulsion',  label:'Revulsion & Repulsion', def:'A strong physical reaction to something deeply unpleasant — your body\'s way of saying "stay far away."' },
+        { id:'contempt',   label:'Contempt & Disdain',    def:'Feeling like something or someone\'s behavior is beneath your standards or simply wrong.' },
+        { id:'distaste',   label:'Distaste & Aversion',   def:'A mild but clear dislike — not hateful, just "no thank you." Like a food you really don\'t want to try.' },
+        { id:'loathing',   label:'Loathing & Abhorrence', def:'A very deep disgust or strong objection to something that goes against your values or feels completely wrong.' },
+      ],
+    },
+    anger: {
+      label:'Anger', icon:'fluent-emoji:pouting-face',
+      desc:'A response to feeling threatened, wronged, or frustrated.',
+      color:'#C62828', pale:'#FFCDD2',
+      sub:[
+        { id:'frustration', label:'Frustration & Irritation', def:'A building feeling when things block your goals or keep annoying you — like a door that just won\'t open.' },
+        { id:'fury',        label:'Fury & Rage',              def:'An intense, explosive burst of anger that feels very hard to contain — needs space and time to cool down.' },
+        { id:'resentment',  label:'Resentment & Bitterness',  def:'A slow, simmering anger held over time — feeling like something unfair happened and it still bothers you.' },
+        { id:'indignation', label:'Indignation & Outrage',    def:'Anger in response to something deeply unfair or wrong — the feeling when someone crosses an important line.' },
+      ],
+    },
+    surprise: {
+      label:'Surprise', icon:'fluent-emoji:astonished-face',
+      desc:'A brief jolt that helps us focus on new, unexpected events.',
+      color:'#BF5200', pale:'#FFE0B2',
+      sub:[
+        { id:'amazement',    label:'Amazement & Wonder',       def:'A positive shock that leaves you in awe — so incredible it takes your breath away in the best way.' },
+        { id:'shock',        label:'Shock & Disbelief',        def:'A jarring, unexpected jolt that\'s hard to process — your brain saying "wait, did that actually just happen?"' },
+        { id:'astonishment', label:'Astonishment & Awe',       def:'Being completely taken aback by something extraordinary — so surprising it almost feels unreal.' },
+        { id:'bewilderment', label:'Bewilderment & Confusion', def:'A puzzled surprise that leaves you unsure what just happened — your mind spinning, trying to catch up.' },
+      ],
+    },
+  };
+
+  // MOOD_ICONS and MOOD_LABELS derived from EMOTION_DATA so they stay in sync.
+  const MOOD_ICONS = Object.fromEntries(Object.entries(EMOTION_DATA).map(([k,v])=>[k,v.icon]));
+  const MOOD_LABELS = Object.fromEntries(Object.entries(EMOTION_DATA).map(([k,v])=>[k,v.label]));
+
   const BUDDY_ICONS = {
     fox:    'fluent-emoji:fox',
     owl:    'fluent-emoji:owl',
     turtle: 'fluent-emoji:turtle',
     bee:    'fluent-emoji:honeybee',
   };
-  const MOOD_ICONS = {
-    happy:    'fluent-emoji:smiling-face-with-smiling-eyes',
-    laughing: 'fluent-emoji:face-with-tears-of-joy',
-    tired:    'fluent-emoji:sleepy-face',
-    angry:    'fluent-emoji:pouting-face',
-    sad:      'fluent-emoji:crying-face',
-    anxious:  'fluent-emoji:worried-face',
-  };
-  const MOOD_LABELS = {
-    happy:'Happy', laughing:'Silly', tired:'Tired',
-    angry:'Angry', sad:'Sad', anxious:'Worried',
-  };
+
   const GROWTH_STAGES = [
     'fluent-emoji:seedling','fluent-emoji:seedling',
     'fluent-emoji:herb','fluent-emoji:herb','fluent-emoji:herb',
@@ -519,6 +581,6 @@ const Swelli = (() => {
     fetchRemoteFlags, acknowledgeRemoteFlag,
     getSettings, saveSettings, applySettings, hasCheckedInRecently, saveAndGoHome,
     getGardenStage, setupAvatarPill,
-    THEMES, FONTS, BUDDY_OPTIONS, BUDDY_ICONS, MOOD_ICONS, MOOD_LABELS, GROWTH_STAGES,
+    THEMES, FONTS, BUDDY_OPTIONS, BUDDY_ICONS, MOOD_ICONS, MOOD_LABELS, GROWTH_STAGES, EMOTION_DATA,
   };
 })();

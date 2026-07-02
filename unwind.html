@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reflow — Unwind</title>
+<title>Swelli — Unwind</title>
 <link rel="stylesheet" href="style.css">
 <style>
   body{ background: var(--mint-pale); min-height:100vh; }
@@ -63,10 +63,11 @@
   const lastMood = entries.length ? entries[entries.length-1].mood : null;
 
   const tips = {
-    tired: "Feeling tired? Try Play it out — Breathing Buddy is gentle and calming.",
-    angry: "Feeling angry? Draw it out, or try a grounding game, to let off some steam.",
-    sad: "Feeling sad? Writing it down, or mapping a small next step, often helps.",
-    anxious: "Feeling worried? Play it out is a great calm place to land.",
+    fear:    "Feeling fearful? The Calm Counter grounding exercise or Breathing Buddy can help settle your nervous system.",
+    anger:   "Feeling angry? Draw it out or try Breathing Buddy — giving your hands something to do really helps.",
+    sad:     "Feeling sad? Writing it down often helps, and your Map is a great way to figure out a next step.",
+    disgust: "Feeling disgusted or bothered by something? Writing about it or talking it through on your Map can help.",
+    surprise:"Surprised by something big? Writing about it or doing a calming game can help you process it.",
   };
   if(lastMood && tips[lastMood]){
     document.getElementById('suggestText').textContent = tips[lastMood];

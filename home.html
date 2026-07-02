@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reflow — My Garden</title>
+<title>Swelli — My Garden</title>
 <link rel="stylesheet" href="style.css">
 <style>
   .hero{ display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom: 22px; flex-wrap:wrap; }
@@ -168,10 +168,11 @@
         const row = document.createElement('div');
         row.className = 'entry-row';
         const activityLabel = { writing:'Wrote it out', drawing:'Drew it out', games:'Played it out', mapping:'Mapped it out' }[e.activity];
+        const moodDisplay = e.subMoodLabel || Swelli.MOOD_LABELS[e.mood] || 'Checked in';
         row.innerHTML = `
           ${Swelli.emoji(Swelli.MOOD_ICONS[e.mood] || 'fluent-emoji:smiling-face-with-smiling-eyes', 34)}
           <div>
-            <div class="what">${Swelli.MOOD_LABELS[e.mood] || 'Checked in'}</div>
+            <div class="what">${moodDisplay}</div>
             <div class="meta">${Swelli.relativeDay(e.ts)}${activityLabel ? ' · ' + activityLabel : ''}</div>
           </div>`;
         list.appendChild(row);
