@@ -6,7 +6,12 @@
 <title>Swelli — Check In</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  .checkin-card{ max-width: 560px; margin: 0 auto; text-align:center; }
+  .already-checked{
+    text-align:center; padding: 40px 20px; max-width: 480px; margin:0 auto;
+  }
+  .already-checked .big-icon{ font-size:64px; margin-bottom:16px; }
+  .already-checked h1{ font-size:24px; margin-bottom:8px; }
+  .already-checked p{ color:var(--ink-soft); font-weight:700; margin:0 0 24px; }
   .checkin-card h1{ font-size: 24px; margin-bottom: 4px; }
   .checkin-card .sub{ color: var(--ink-soft); font-weight:700; margin: 0 0 6px; }
   textarea{
@@ -29,12 +34,20 @@
   <div class="brand"><span class="brand-name">Swelli for Education</span></div>
   <nav>
     <a href="home.html">Home</a>
-    <a href="checkin.html" class="active">Check In</a>
+    <a href="settings.html">Settings</a>
   </nav>
 </div>
 
 <div class="page narrow">
-  <div class="card checkin-card">
+
+  <div class="already-checked" id="alreadyChecked" style="display:none;">
+    <iconify-icon icon="fluent-emoji:seedling" width="64" style="display:block;margin:0 auto 16px;"></iconify-icon>
+    <h1 class="display" id="alreadyTitle">You've already checked in this week!</h1>
+    <p id="alreadyMsg">Your garden is growing. Come back next time to check in again.</p>
+    <a class="btn btn-primary" href="home.html">Go to my garden →</a>
+  </div>
+
+  <div class="card checkin-card" id="checkinCard">
     <h1 class="display">How are you feeling today? 🌤️</h1>
     <p class="sub">Tap the face that matches your mood.</p>
 
@@ -71,6 +84,20 @@
 <script src="data.js"></script>
 <script>
   const session = Swelli.requireSession();
+
+  // Block repeat check-ins based on frequency setting
+  if(session && Swelli.hasCheckedInRecently()){
+    const settings = Swelli.getSettings();
+    const isDaily = settings.checkInFrequency === 'daily';
+    document.getElementById('checkinCard').style.display = 'none';
+    document.getElementById('alreadyChecked').style.display = 'block';
+    document.getElementById('alreadyTitle').textContent = isDaily
+      ? "You've already checked in today!"
+      : "You've already checked in this week!";
+    document.getElementById('alreadyMsg').textContent = isDaily
+      ? "Come back tomorrow to plant your next sprout."
+      : "Come back next week to plant your next sprout.";
+  }
 
   if(session && session.hasPlan){
     document.getElementById('planCard').style.display = 'block';

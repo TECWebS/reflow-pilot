@@ -336,6 +336,110 @@ const Swelli = (() => {
     });
   }
 
+  // ---- Settings ----
+  const SETTINGS_KEY = (id) => `swelli:settings:${id}`;
+
+  const THEMES = {
+    mint:     { label:'Mint',     emoji:'🌿', vars:{ '--mint-deep':'#2F9C8D','--mint':'#3FB3A2','--mint-pale':'#DCF2EC','--mint-paler':'#EFFAF7','--coral':'#FF8A65','--coral-deep':'#F26B45' } },
+    sunset:   { label:'Sunset',   emoji:'🌅', vars:{ '--mint-deep':'#BF5530','--mint':'#E07050','--mint-pale':'#FDEBD6','--mint-paler':'#FEF5ED','--coral':'#F4A460','--coral-deep':'#BF5530' } },
+    ocean:    { label:'Ocean',    emoji:'🌊', vars:{ '--mint-deep':'#1A5C8A','--mint':'#2980B9','--mint-pale':'#D4EAF7','--mint-paler':'#EAF5FC','--coral':'#5DADE2','--coral-deep':'#1A5C8A' } },
+    lavender: { label:'Lavender', emoji:'💜', vars:{ '--mint-deep':'#6B4A9B','--mint':'#9370CC','--mint-pale':'#EDE0F9','--mint-paler':'#F5EEFF','--coral':'#C39BD3','--coral-deep':'#6B4A9B' } },
+    forest:   { label:'Forest',   emoji:'🌲', vars:{ '--mint-deep':'#1E6B3C','--mint':'#27AE60','--mint-pale':'#C8E8D4','--mint-paler':'#E5F5EC','--coral':'#58D68D','--coral-deep':'#1E6B3C' } },
+  };
+
+  const FONTS = {
+    friendly: { label:'Friendly', sample:'Aa', family:"'Nunito', sans-serif",     url:null },
+    playful:  { label:'Playful',  sample:'Aa', family:"'Comic Neue', cursive",     url:'https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap' },
+    clear:    { label:'Clear',    sample:'Aa', family:"'Open Sans', sans-serif",   url:'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap' },
+  };
+
+  const BUDDY_OPTIONS = [
+    { id:'fox',       icon:'fluent-emoji:fox',         label:'Fox'       },
+    { id:'owl',       icon:'fluent-emoji:owl',          label:'Owl'       },
+    { id:'turtle',    icon:'fluent-emoji:turtle',       label:'Turtle'    },
+    { id:'bee',       icon:'fluent-emoji:honeybee',     label:'Bee'       },
+    { id:'bear',      icon:'fluent-emoji:bear',         label:'Bear'      },
+    { id:'panda',     icon:'fluent-emoji:panda',        label:'Panda'     },
+    { id:'rabbit',    icon:'fluent-emoji:rabbit',       label:'Rabbit'    },
+    { id:'cat',       icon:'fluent-emoji:cat',          label:'Cat'       },
+    { id:'dog',       icon:'fluent-emoji:dog',          label:'Dog'       },
+    { id:'frog',      icon:'fluent-emoji:frog',         label:'Frog'      },
+    { id:'penguin',   icon:'fluent-emoji:penguin',      label:'Penguin'   },
+    { id:'lion',      icon:'fluent-emoji:lion',         label:'Lion'      },
+    { id:'butterfly', icon:'fluent-emoji:butterfly',    label:'Butterfly' },
+    { id:'unicorn',   icon:'fluent-emoji:unicorn',      label:'Unicorn'   },
+    { id:'dragon',    icon:'fluent-emoji:dragon',       label:'Dragon'    },
+    { id:'hamster',   icon:'fluent-emoji:hamster',      label:'Hamster'   },
+    { id:'koala',     icon:'fluent-emoji:koala',        label:'Koala'     },
+    { id:'parrot',    icon:'fluent-emoji:parrot',       label:'Parrot'    },
+    { id:'octopus',   icon:'fluent-emoji:octopus',      label:'Octopus'   },
+    { id:'elephant',  icon:'fluent-emoji:elephant',     label:'Elephant'  },
+  ];
+
+  function getSettings(){
+    const session = getSession();
+    const defaults = { theme:'mint', font:'friendly', checkInFrequency:'weekly', displayName:'' };
+    if(!session) return defaults;
+    return safeParse(localStorage.getItem(SETTINGS_KEY(session.studentId)), defaults);
+  }
+
+  function saveSettings(patch){
+    const session = getSession();
+    if(!session) return;
+    const updated = { ...getSettings(), ...patch };
+    localStorage.setItem(SETTINGS_KEY(session.studentId), JSON.stringify(updated));
+    if(patch.buddy){
+      session.buddy = patch.buddy;
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    }
+    applySettings(updated);
+    return updated;
+  }
+
+  function applySettings(s){
+    if(!s) return;
+    const theme = THEMES[s.theme] || THEMES.mint;
+    Object.entries(theme.vars).forEach(([k,v])=> document.documentElement.style.setProperty(k, v));
+    const font = FONTS[s.font] || FONTS.friendly;
+    if(font.url && !document.getElementById('swelli-font-link')){
+      const link = document.createElement('link');
+      link.id = 'swelli-font-link'; link.rel = 'stylesheet'; link.href = font.url;
+      document.head.appendChild(link);
+    }
+    document.body.style.fontFamily = font.family;
+  }
+
+  // Check if the student has already checked in within their chosen frequency window.
+  function hasCheckedInRecently(){
+    const entries = getEntries();
+    if(!entries.length) return false;
+    const freq = getSettings().checkInFrequency || 'weekly';
+    const last = entries[entries.length - 1];
+    const now = new Date();
+    if(freq === 'daily'){
+      return new Date(last.ts).toDateString() === now.toDateString();
+    }
+    // Weekly: same Mon–Sun calendar week
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+    startOfWeek.setHours(0,0,0,0);
+    return last.ts >= startOfWeek.getTime();
+  }
+
+  // Redirect to home after a save action (used by writing, drawing, mapping).
+  function saveAndGoHome(entryPatch, toastEl, delay){
+    if(entryPatch) updateLastEntry(entryPatch);
+    delay = delay || 1600;
+    if(toastEl){ toastEl.classList.add('show'); }
+    setTimeout(()=> window.location.href = 'home.html', delay);
+  }
+
+  // Auto-apply settings on every page load so themes/fonts persist across pages.
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const session = getSession();
+    if(session) applySettings(getSettings());
+  });
+
   return {
     storageAvailable, icon, emoji, slugify,
     createSession, getSession, clearSession, requireSession,
@@ -343,6 +447,7 @@ const Swelli = (() => {
     startPreview, endPreview,
     scanText, checkAndFlag, addFlag, getFlags, getUnacknowledgedFlags, acknowledgeFlag, showSafetyOverlay,
     fetchRemoteFlags, acknowledgeRemoteFlag,
-    BUDDY_ICONS, MOOD_ICONS, MOOD_LABELS, GROWTH_STAGES,
+    getSettings, saveSettings, applySettings, hasCheckedInRecently, saveAndGoHome,
+    THEMES, FONTS, BUDDY_OPTIONS, BUDDY_ICONS, MOOD_ICONS, MOOD_LABELS, GROWTH_STAGES,
   };
 })();

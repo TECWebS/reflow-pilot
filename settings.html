@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Swelli — Settings</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .settings-section{ margin-bottom: 28px; }
+  .settings-section h2{ font-size:18px; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+  .settings-section .hint{ color:var(--ink-soft); font-weight:700; font-size:13px; margin:0 0 14px; }
+
+  /* Buddy grid */
+  .buddy-grid{ display:grid; grid-template-columns: repeat(5,1fr); gap:10px; }
+  .buddy-option{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:#fff; border:3px solid var(--line); border-radius: var(--radius-md);
+    padding: 12px 6px; font-size:12px; font-weight:800; color:var(--ink-soft);
+    transition: border-color .12s, transform .1s;
+  }
+  .buddy-option:hover{ border-color:var(--mint); }
+  .buddy-option.selected{ border-color:var(--coral); background:#FFF1EC; transform:scale(1.04); }
+
+  /* Theme swatches */
+  .theme-row{ display:flex; gap:12px; flex-wrap:wrap; }
+  .theme-swatch{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:#fff; border:3px solid var(--line); border-radius: var(--radius-md);
+    padding: 16px 18px; min-width:80px; font-weight:800; font-size:12px; color:var(--ink);
+    transition: border-color .12s, transform .1s;
+  }
+  .theme-swatch .dots{ display:flex; gap:4px; }
+  .theme-swatch .dot{ width:16px; height:16px; border-radius:50%; }
+  .theme-swatch:hover{ border-color:var(--mint); }
+  .theme-swatch.selected{ border-color:var(--coral); background:#FFF1EC; transform:scale(1.04); }
+
+  /* Font options */
+  .font-row{ display:flex; gap:12px; flex-wrap:wrap; }
+  .font-option{
+    background:#fff; border:3px solid var(--line); border-radius: var(--radius-md);
+    padding: 16px 22px; text-align:center; min-width:100px;
+    transition: border-color .12s;
+  }
+  .font-option:hover{ border-color:var(--mint); }
+  .font-option.selected{ border-color:var(--coral); background:#FFF1EC; }
+  .font-option .sample{ font-size:28px; font-weight:700; display:block; margin-bottom:4px; }
+  .font-option .flabel{ font-size:12px; font-weight:800; color:var(--ink-soft); }
+
+  /* Frequency toggle */
+  .freq-row{ display:flex; gap:12px; flex-wrap:wrap; }
+  .freq-option{
+    flex:1; min-width:140px; background:#fff; border:3px solid var(--line);
+    border-radius: var(--radius-md); padding: 16px; text-align:center;
+    font-weight:800; font-size:14px; transition: border-color .12s;
+  }
+  .freq-option .freq-icon{ font-size:28px; display:block; margin-bottom:6px; }
+  .freq-option:hover{ border-color:var(--mint); }
+  .freq-option.selected{ border-color:var(--coral); background:#FFF1EC; }
+
+  /* Name field */
+  .name-row{ display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+  .name-row input{ flex:1; min-width:180px; }
+  .save-confirm{ font-size:13px; font-weight:700; color:var(--mint-deep); display:none; }
+  .save-confirm.show{ display:inline; }
+
+  /* Current buddy hero */
+  .buddy-hero{
+    background: linear-gradient(135deg, var(--mint), var(--mint-deep));
+    border-radius: var(--radius-lg); padding: 24px; text-align:center; margin-bottom:28px; color:#fff;
+  }
+  .buddy-hero .buddy-name{ font-family:'Baloo 2'; font-weight:800; font-size:20px; margin-top:8px; }
+  .buddy-hero .buddy-greeting{ font-size:14px; font-weight:700; opacity:0.88; }
+
+  @media (max-width:480px){
+    .buddy-grid{ grid-template-columns: repeat(4,1fr); }
+    .theme-row, .font-row, .freq-row{ flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="back" onclick="location.href='home.html'" aria-label="Back to home">←</button>
+  <div class="brand"><span class="brand-name">Swelli for Education</span></div>
+  <nav>
+    <a href="home.html">Home</a>
+    <a href="settings.html" class="active">Settings</a>
+  </nav>
+</div>
+
+<div class="page narrow">
+
+  <div class="buddy-hero">
+    <div id="heroBuddy"></div>
+    <div class="buddy-name" id="heroName">Loading…</div>
+    <div class="buddy-greeting">Your garden companion</div>
+  </div>
+
+  <!-- BUDDY -->
+  <div class="settings-section">
+    <h2 class="display">Choose your buddy</h2>
+    <p class="hint">Pick any character — your buddy lives in your garden.</p>
+    <div class="buddy-grid" id="buddyGrid"></div>
+  </div>
+
+  <!-- THEME -->
+  <div class="settings-section">
+    <h2 class="display">Color theme</h2>
+    <p class="hint">Changes the color of your whole Swelli experience.</p>
+    <div class="theme-row" id="themeRow"></div>
+  </div>
+
+  <!-- FONT -->
+  <div class="settings-section">
+    <h2 class="display">Text style</h2>
+    <p class="hint">Choose how the words look.</p>
+    <div class="font-row" id="fontRow"></div>
+  </div>
+
+  <!-- CHECK-IN FREQUENCY -->
+  <div class="settings-section">
+    <h2 class="display">Check-in schedule</h2>
+    <p class="hint">Ask your teacher which one applies to your class.</p>
+    <div class="freq-row" id="freqRow">
+      <button class="freq-option" data-freq="daily">
+        <span class="freq-icon"><iconify-icon icon="fluent-emoji:sun" width="28"></iconify-icon></span>
+        Every day
+      </button>
+      <button class="freq-option" data-freq="weekly">
+        <span class="freq-icon"><iconify-icon icon="fluent-emoji:calendar" width="28"></iconify-icon></span>
+        Once a week
+      </button>
+    </div>
+  </div>
+
+  <!-- DISPLAY NAME -->
+  <div class="settings-section">
+    <h2 class="display">Your name</h2>
+    <p class="hint">This is what shows in your greeting on the home page.</p>
+    <div class="name-row">
+      <div class="field" style="margin:0; flex:1;">
+        <input id="displayNameInput" type="text" placeholder="Your first name…">
+      </div>
+      <button class="btn btn-secondary" id="saveNameBtn">Save</button>
+      <span class="save-confirm" id="nameConfirm">Saved!</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="data.js"></script>
+<script>
+  const session = Swelli.requireSession();
+  if(!session) window.location.href = 'index.html';
+
+  let settings = Swelli.getSettings();
+
+  // ---- Hero ----
+  function updateHero(){
+    const buddy = Swelli.BUDDY_OPTIONS.find(b=>b.id === (session.buddy||'fox')) || Swelli.BUDDY_OPTIONS[0];
+    document.getElementById('heroBuddy').innerHTML = Swelli.emoji(buddy.icon, 72);
+    document.getElementById('heroName').textContent =
+      (settings.displayName || session.name || 'Friend') + "'s Buddy: " + buddy.label;
+  }
+  updateHero();
+
+  // ---- Buddy grid ----
+  const buddyGrid = document.getElementById('buddyGrid');
+  Swelli.BUDDY_OPTIONS.forEach(b=>{
+    const btn = document.createElement('button');
+    btn.className = 'buddy-option' + (session.buddy === b.id ? ' selected' : '');
+    btn.innerHTML = Swelli.emoji(b.icon, 36) + `<span>${b.label}</span>`;
+    btn.addEventListener('click', ()=>{
+      buddyGrid.querySelectorAll('.buddy-option').forEach(x=>x.classList.remove('selected'));
+      btn.classList.add('selected');
+      session.buddy = b.id;
+      settings = Swelli.saveSettings({ buddy: b.id });
+      updateHero();
+    });
+    buddyGrid.appendChild(btn);
+  });
+
+  // ---- Theme swatches ----
+  const themeRow = document.getElementById('themeRow');
+  Object.entries(Swelli.THEMES).forEach(([key, theme])=>{
+    const btn = document.createElement('button');
+    btn.className = 'theme-swatch' + (settings.theme === key ? ' selected' : '');
+    const dots = Object.values(theme.vars).slice(0,3).map(c=>`<span class="dot" style="background:${c}"></span>`).join('');
+    btn.innerHTML = `<div class="dots">${dots}</div><span>${theme.label}</span>`;
+    btn.addEventListener('click', ()=>{
+      themeRow.querySelectorAll('.theme-swatch').forEach(x=>x.classList.remove('selected'));
+      btn.classList.add('selected');
+      settings = Swelli.saveSettings({ theme: key });
+    });
+    themeRow.appendChild(btn);
+  });
+
+  // ---- Font options ----
+  const fontRow = document.getElementById('fontRow');
+  Object.entries(Swelli.FONTS).forEach(([key, font])=>{
+    const btn = document.createElement('button');
+    btn.className = 'font-option' + (settings.font === key ? ' selected' : '');
+    btn.innerHTML = `<span class="sample" style="font-family:${font.family}">${font.sample}</span><span class="flabel">${font.label}</span>`;
+    btn.addEventListener('click', ()=>{
+      fontRow.querySelectorAll('.font-option').forEach(x=>x.classList.remove('selected'));
+      btn.classList.add('selected');
+      settings = Swelli.saveSettings({ font: key });
+    });
+    fontRow.appendChild(btn);
+  });
+
+  // ---- Frequency ----
+  document.querySelectorAll('.freq-option').forEach(btn=>{
+    if(btn.dataset.freq === settings.checkInFrequency) btn.classList.add('selected');
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.freq-option').forEach(x=>x.classList.remove('selected'));
+      btn.classList.add('selected');
+      settings = Swelli.saveSettings({ checkInFrequency: btn.dataset.freq });
+    });
+  });
+
+  // ---- Display name ----
+  const nameInput = document.getElementById('displayNameInput');
+  nameInput.value = settings.displayName || session.name || '';
+  document.getElementById('saveNameBtn').addEventListener('click', ()=>{
+    settings = Swelli.saveSettings({ displayName: nameInput.value.trim() });
+    updateHero();
+    const confirm = document.getElementById('nameConfirm');
+    confirm.classList.add('show');
+    setTimeout(()=> confirm.classList.remove('show'), 2000);
+  });
+</script>
+</body>
+</html>

@@ -69,7 +69,7 @@
   <div class="brand"><span class="brand-name">Swelli for Education</span></div>
   <nav>
     <a href="home.html">Home</a>
-    <a href="checkin.html">Check In</a>
+    <a href="settings.html">Settings</a>
   </nav>
 </div>
 
@@ -366,18 +366,12 @@
   const toast = document.getElementById('toast');
   document.getElementById('saveMapBtn').addEventListener('click', ()=>{
     const text = issueText.value.trim();
-    Swelli.updateLastEntry({
-      activity: 'mapping',
-      activityDetail: text.slice(0,200),
-    });
-
     const hits = Swelli.checkAndFlag(text, 'My Map issue');
     if(hits.length){
-      Swelli.updateLastEntry({ flagged: true, flagCategories: hits.map(h => h.category) });
-      Swelli.showSafetyOverlay(hits);
+      Swelli.updateLastEntry({ flagged:true, flagCategories:hits.map(h=>h.category) });
+      Swelli.showSafetyOverlay(hits, ()=> Swelli.saveAndGoHome({ activity:'mapping', activityDetail:text.slice(0,200) }, null, 0));
     } else {
-      toast.classList.add('show');
-      setTimeout(()=> toast.classList.remove('show'), 2200);
+      Swelli.saveAndGoHome({ activity:'mapping', activityDetail:text.slice(0,200) }, toast);
     }
   });
 
