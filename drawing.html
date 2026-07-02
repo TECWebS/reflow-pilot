@@ -30,13 +30,15 @@
   .mini-switch .knob{ position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition: left .15s; }
   .mini-switch.checked{ background: var(--mint-deep); }
   .mini-switch.checked .knob{ left:20px; }
+  .sticker-row{ display:flex; flex-wrap:wrap; gap:6px; }
+  .sticker-btn{ font-size:22px; padding:4px; background:none; border:2px solid var(--line); border-radius:8px; }
+  .sticker-btn:hover{ border-color:var(--mint); }
   @media (max-width: 760px){ .draw-layout{ grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <button class="back" onclick="location.href='unwind.html'" aria-label="Back">←</button>
   <div class="brand"><span class="brand-name">Swelli for Education</span></div>
   <nav>
     <a href="home.html">Home</a>
@@ -80,6 +82,16 @@
       </div>
 
       <button class="btn btn-ghost" id="clearBtn"><svg class="icon icon-sm"><use href="icons.svg#icon-trash"/></svg>&nbsp; Clear page</button>
+
+      <div>
+        <span class="tool-label">Stamp a shape</span>
+        <div class="tool-grid" id="shapeStamps"></div>
+      </div>
+
+      <div>
+        <span class="tool-label">Stamp a sticker</span>
+        <div class="sticker-row" id="stickerRow"></div>
+      </div>
     </div>
 
     <div class="canvas-wrap">
@@ -241,6 +253,68 @@
     const rect = drawCanvas.getBoundingClientRect();
     ctx.fillStyle = '#fff';
     ctx.fillRect(0,0,rect.width,rect.height);
+  });
+
+  // ---- Shape stamps ----
+  const SHAPES = [
+    { label:'Heart', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.moveTo(x,y-s*0.3); ctx.bezierCurveTo(x,y-s*0.6,x+s*0.5,y-s*0.6,x+s*0.5,y-s*0.3); ctx.bezierCurveTo(x+s*0.5,y,x,y+s*0.4,x,y+s*0.4); ctx.bezierCurveTo(x,y+s*0.4,x-s*0.5,y,x-s*0.5,y-s*0.3); ctx.bezierCurveTo(x-s*0.5,y-s*0.6,x,y-s*0.6,x,y-s*0.3); } },
+    { label:'Star', fn:(ctx,x,y,s)=>{ const sp=5; ctx.beginPath(); for(let i=0;i<sp*2;i++){ const r=i%2===0?s:s*0.4; const a=Math.PI*i/sp-Math.PI/2; i===0?ctx.moveTo(x+r*Math.cos(a),y+r*Math.sin(a)):ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a)); } ctx.closePath(); } },
+    { label:'Cloud', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.arc(x-s*0.2,y,s*0.35,Math.PI,0); ctx.arc(x+s*0.2,y,s*0.35,Math.PI,0); ctx.arc(x,y-s*0.2,s*0.3,Math.PI,0); ctx.arc(x-s*0.35,y,s*0.22,0,Math.PI); ctx.arc(x+s*0.35,y,s*0.22,0,Math.PI); ctx.closePath(); } },
+    { label:'Sun', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.arc(x,y,s*0.35,0,Math.PI*2); ctx.fill(); for(let i=0;i<8;i++){ const a=Math.PI*2*i/8; ctx.beginPath(); ctx.moveTo(x+s*0.42*Math.cos(a),y+s*0.42*Math.sin(a)); ctx.lineTo(x+s*0.6*Math.cos(a),y+s*0.6*Math.sin(a)); ctx.stroke(); } } },
+    { label:'Lightning', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.moveTo(x+s*0.1,y-s*0.5); ctx.lineTo(x-s*0.1,y); ctx.lineTo(x+s*0.08,y); ctx.lineTo(x-s*0.1,y+s*0.5); ctx.lineTo(x+s*0.25,y+s*0.05); ctx.lineTo(x+s*0.08,y+s*0.05); ctx.lineTo(x+s*0.3,y-s*0.5); ctx.closePath(); } },
+    { label:'Arrow', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.moveTo(x-s*0.5,y-s*0.12); ctx.lineTo(x+s*0.1,y-s*0.12); ctx.lineTo(x+s*0.1,y-s*0.3); ctx.lineTo(x+s*0.5,y); ctx.lineTo(x+s*0.1,y+s*0.3); ctx.lineTo(x+s*0.1,y+s*0.12); ctx.lineTo(x-s*0.5,y+s*0.12); ctx.closePath(); } },
+    { label:'Bubble', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.roundRect(x-s*0.5,y-s*0.4,s,s*0.6,s*0.15); ctx.fill(); ctx.beginPath(); ctx.moveTo(x-s*0.2,y+s*0.2); ctx.lineTo(x-s*0.35,y+s*0.45); ctx.lineTo(x,y+s*0.18); ctx.closePath(); } },
+    { label:'Diamond', fn:(ctx,x,y,s)=>{ ctx.beginPath(); ctx.moveTo(x,y-s*0.5); ctx.lineTo(x+s*0.4,y); ctx.lineTo(x,y+s*0.5); ctx.lineTo(x-s*0.4,y); ctx.closePath(); } },
+    { label:'Flower', fn:(ctx,x,y,s)=>{ for(let i=0;i<5;i++){ const a=Math.PI*2*i/5; const px=x+s*0.3*Math.cos(a), py=y+s*0.3*Math.sin(a); ctx.beginPath(); ctx.arc(px,py,s*0.22,0,Math.PI*2); ctx.fill(); } ctx.beginPath(); ctx.arc(x,y,s*0.2,0,Math.PI*2); } },
+  ];
+
+  const stampWrap = document.getElementById('shapeStamps');
+  SHAPES.forEach(sh=>{
+    const b = document.createElement('button');
+    b.className = 'tool-btn';
+    b.title = sh.label;
+    b.textContent = sh.label[0];
+    b.style.fontSize = '11px'; b.style.fontWeight = '800';
+    b.addEventListener('click', ()=>{
+      const rect = drawCanvas.getBoundingClientRect();
+      const cx = rect.width / 2, cy = rect.height / 2, size = Math.min(rect.width, rect.height) * 0.18;
+      ctx.fillStyle = currentColor; ctx.strokeStyle = currentColor;
+      ctx.lineWidth = 3; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      sh.fn(ctx, cx, cy, size);
+      ctx.fill();
+    });
+    stampWrap.appendChild(b);
+  });
+
+  // ---- Fluent Emoji stickers (stamped via offscreen canvas) ----
+  const STICKERS = [
+    'fluent-emoji:red-heart','fluent-emoji:star','fluent-emoji:sun',
+    'fluent-emoji:rainbow','fluent-emoji:four-leaf-clover','fluent-emoji:fire',
+    'fluent-emoji:sparkles','fluent-emoji:seedling','fluent-emoji:balloon',
+    'fluent-emoji:trophy','fluent-emoji:musical-note','fluent-emoji:butterfly',
+  ];
+  const stickerRow = document.getElementById('stickerRow');
+  STICKERS.forEach(iconName=>{
+    const b = document.createElement('button');
+    b.className = 'sticker-btn';
+    b.innerHTML = `<iconify-icon icon="${iconName}" width="22" height="22"></iconify-icon>`;
+    b.addEventListener('click', ()=>{
+      // Render the iconify-icon to a temp image via SVG serialization then draw to canvas
+      const iEl = b.querySelector('iconify-icon');
+      const svgStr = iEl?.shadowRoot?.querySelector('svg')?.outerHTML;
+      if(!svgStr) return;
+      const img = new Image();
+      const blob = new Blob([svgStr], {type:'image/svg+xml'});
+      const url = URL.createObjectURL(blob);
+      img.onload = ()=>{
+        const rect = drawCanvas.getBoundingClientRect();
+        ctx.drawImage(img, rect.width/2 - 30, rect.height/2 - 30, 60, 60);
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    });
+    stickerRow.appendChild(b);
   });
 
   const toast = document.getElementById('toast');

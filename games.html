@@ -6,17 +6,54 @@
 <title>Swelli — SEL Games</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  .game-picker{ display:grid; grid-template-columns: repeat(3,1fr); gap:16px; margin-bottom: 26px; }
+  .game-picker{ display:grid; grid-template-columns: repeat(5,1fr); gap:12px; margin-bottom: 26px; }
   .game-tab{
-    background:#fff; border-radius: var(--radius-lg); padding:20px; text-align:center;
+    background:#fff; border-radius: var(--radius-lg); padding:16px 10px; text-align:center;
     box-shadow: var(--shadow-card); border:3px solid transparent;
   }
-  .game-tab .icon{ width:32px; height:32px; color: var(--mint-deep); margin: 0 auto 8px; }
-  .game-tab h3{ font-size:16px; margin-bottom:4px; }
-  .game-tab p{ margin:0; font-size:13px; color: var(--ink-soft); }
+  .game-tab iconify-icon{ display:block; margin: 0 auto 8px; }
+  .game-tab h3{ font-size:13px; margin-bottom:4px; }
+  .game-tab p{ margin:0; font-size:11px; color: var(--ink-soft); }
   .game-tab.active{ border-color: var(--mint); }
   .game-panel{ display:none; }
   .game-panel.active{ display:block; }
+
+  /* Color Your Feelings */
+  .color-feelings-wrap{ display:grid; grid-template-columns: 140px 1fr; gap:20px; align-items:start; }
+  .color-legend{ display:flex; flex-direction:column; gap:8px; }
+  .color-swatch-row{ display:flex; align-items:center; gap:10px; padding: 8px 10px; border-radius: var(--radius-sm); border:3px solid transparent; }
+  .color-swatch-row.active-color{ border-color: var(--ink); }
+  .color-swatch-row .cswatch{ width:28px; height:28px; border-radius:50%; flex-shrink:0; border:2px solid rgba(0,0,0,0.12); }
+  .color-swatch-row .clabel{ font-size:12px; font-weight:700; color: var(--ink); }
+  .color-card-label{ font-family:'Baloo 2'; font-weight:800; font-size:15px; color: var(--mint-deep); text-align:center; margin-bottom:10px; }
+  .color-history{ display:flex; flex-wrap:wrap; gap:12px; margin-top:18px; }
+  .color-history svg{ width:100px; height:100px; border-radius:12px; border:2px solid var(--line); background:#fff; }
+  .color-history .hist-label{ font-size:11px; font-weight:700; color: var(--ink-soft); text-align:center; margin-top:4px; }
+  .color-history-item{ display:flex; flex-direction:column; align-items:center; }
+
+  /* Jeopardy */
+  .jeopardy-score-row{ font-family:'Baloo 2'; font-weight:800; font-size:18px; color: var(--mint-deep); text-align:center; margin-bottom:14px; }
+  .jeopardy-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:10px; }
+  .jeopardy-cat-header{ background: var(--mint-deep); color:#fff; font-family:'Baloo 2'; font-weight:800; font-size:13px; text-align:center; padding:10px 6px; border-radius: var(--radius-sm); }
+  .jeopardy-tile{
+    background: var(--coral); color:#fff; font-family:'Baloo 2'; font-weight:800; font-size:20px;
+    text-align:center; padding:18px 6px; border-radius: var(--radius-sm); border:none; transition: transform .1s;
+  }
+  .jeopardy-tile:hover{ transform: scale(1.04); }
+  .jeopardy-tile.used{ background: var(--line); color: var(--ink-soft); cursor:default; font-size:14px; }
+  .jeopardy-question{ text-align:center; max-width:480px; margin:0 auto; }
+  .jeopardy-cat{ font-family:'Baloo 2'; font-weight:800; color: var(--mint-deep); font-size:15px; margin-bottom:4px; }
+  .jeopardy-pts{ font-family:'Baloo 2'; font-weight:800; font-size:28px; color: var(--coral); margin-bottom:14px; }
+  .jeopardy-q{ font-weight:700; font-size:17px; margin-bottom:18px; line-height:1.4; }
+  .jeopardy-input{ width:100%; border-radius: var(--radius-md); border:2px solid var(--line); padding:12px 14px; font-family:'Nunito'; font-size:15px; font-weight:600; resize:none; margin-bottom:14px; }
+  .jeopardy-input:focus{ outline:none; border-color:var(--mint); }
+  .jeopardy-answer{ background: var(--mint-paler); border-radius: var(--radius-md); padding:16px; margin-top:10px; }
+  .jeopardy-answer p{ font-weight:700; font-size:15px; color: var(--mint-deep); margin:0; }
+  @media (max-width:640px){
+    .game-picker{ grid-template-columns: repeat(3,1fr); }
+    .color-feelings-wrap{ grid-template-columns:1fr; }
+    .jeopardy-grid{ grid-template-columns: repeat(2,1fr); }
+  }
 
   /* Breathing Buddy */
   .breathe-stage{ display:flex; flex-direction:column; align-items:center; gap:18px; padding: 30px 0; }
@@ -51,7 +88,6 @@
 <body>
 
 <div class="topbar">
-  <button class="back" onclick="location.href='unwind.html'" aria-label="Back">←</button>
   <div class="brand"><span class="brand-name">Swelli for Education</span></div>
   <nav>
     <a href="home.html">Home</a>
@@ -63,9 +99,11 @@
   <h1 class="display" style="margin-bottom:16px; display:flex; align-items:center; gap:10px;"><svg class="icon icon-md" style="color:var(--coral);"><use href="icons.svg#icon-gamepad"/></svg>SEL Games</h1>
 
   <div class="game-picker">
-    <button class="game-tab active" data-game="breathe"><svg class="icon"><use href="icons.svg#icon-breath"/></svg><h3>Breathing Buddy</h3><p>Calm your body with slow breaths</p></button>
-    <button class="game-tab" data-game="match"><svg class="icon"><use href="icons.svg#icon-cards"/></svg><h3>Feelings Match</h3><p>Match pairs of feeling faces</p></button>
-    <button class="game-tab" data-game="calm"><svg class="icon"><use href="icons.svg#icon-hand"/></svg><h3>Calm Counter</h3><p>5-4-3-2-1 grounding exercise</p></button>
+    <button class="game-tab active" data-game="breathe"><iconify-icon icon="fluent-emoji:bubbles" width="32"></iconify-icon><h3>Breathing Buddy</h3><p>Calm your body with slow breaths</p></button>
+    <button class="game-tab" data-game="match"><iconify-icon icon="fluent-emoji:joker" width="32"></iconify-icon><h3>Feelings Match</h3><p>Match pairs of feeling faces</p></button>
+    <button class="game-tab" data-game="calm"><iconify-icon icon="fluent-emoji:raised-hand" width="32"></iconify-icon><h3>Calm Counter</h3><p>5-4-3-2-1 grounding exercise</p></button>
+    <button class="game-tab" data-game="color"><iconify-icon icon="fluent-emoji:artist-palette" width="32"></iconify-icon><h3>Color Your Feelings</h3><p>Color a card that shows your mood</p></button>
+    <button class="game-tab" data-game="jeopardy"><iconify-icon icon="fluent-emoji:light-bulb" width="32"></iconify-icon><h3>Name That Feeling</h3><p>Jeopardy-style feelings quiz</p></button>
   </div>
 
   <div class="card">
@@ -96,8 +134,54 @@
       </div>
     </div>
 
+    <!-- ===== Color Your Feelings ===== -->
+    <div class="game-panel" id="panel-color">
+      <div class="color-feelings-wrap">
+        <div class="color-legend" id="colorLegend"></div>
+        <div class="color-canvas-wrap">
+          <div class="color-card-label" id="colorCardLabel">Today's Card</div>
+          <svg id="colorSVG" viewBox="0 0 300 300" width="100%" style="max-width:340px; display:block; margin:0 auto; border-radius:16px; border:2px solid var(--line); background:#fff;"></svg>
+          <div style="text-align:center; margin-top:14px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="saveColorBtn">Save today's card</button>
+            <button class="btn btn-secondary" id="viewHistoryBtn">View past cards</button>
+          </div>
+        </div>
+        <div class="color-history" id="colorHistory" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- ===== Name That Feeling Jeopardy ===== -->
+    <div class="game-panel" id="panel-jeopardy">
+      <div id="jeopardyBoard">
+        <div class="jeopardy-score-row">Score: <span id="jeopScore">0</span> pts</div>
+        <div class="jeopardy-grid" id="jeopGrid"></div>
+      </div>
+      <div class="jeopardy-question" id="jeopQuestion" style="display:none;">
+        <div class="jeopardy-cat" id="jeopCat"></div>
+        <div class="jeopardy-pts" id="jeopPts"></div>
+        <p class="jeopardy-q" id="jeopQ"></p>
+        <textarea class="jeopardy-input" id="jeopInput" placeholder="Type your answer here…" rows="3"></textarea>
+        <button class="btn btn-primary" id="jeopReveal">Reveal answer</button>
+        <div class="jeopardy-answer" id="jeopAnswer" style="display:none;">
+          <p id="jeopCorrect"></p>
+          <div style="display:flex; gap:10px; justify-content:center; margin-top:14px;">
+            <button class="btn btn-primary" id="jeopGotIt">I got it! +<span id="jeopAddPts"></span></button>
+            <button class="btn btn-ghost" id="jeopMissed">Not quite</button>
+          </div>
+        </div>
+        <button class="btn btn-ghost" id="jeopBack" style="margin-top:10px;">← Back to board</button>
+      </div>
+      <div class="jeopardy-win" id="jeopWin" style="display:none;">
+        <p style="font-size:20px; font-weight:800; color:var(--mint-deep);">Board complete!</p>
+        <p style="font-weight:700; color:var(--ink-soft);">Final score: <strong id="jeopFinalScore"></strong> pts</p>
+        <button class="btn btn-secondary" id="jeopReset">Play again</button>
+      </div>
+    </div>
+
   </div>
 </div>
+
+<div class="toast" id="toast">Your card was saved!</div>
 
 <script src="data.js"></script>
 <script>
@@ -167,7 +251,7 @@
   function flipCard(c){
     if(lock || c.classList.contains('flipped') || c.classList.contains('matched')) return;
     c.classList.add('flipped');
-    c.innerHTML = `<svg class="icon"><use href="icons.svg#${c.dataset.icon}"/></svg>`;
+    c.innerHTML = Swelli.emoji(c.dataset.icon, 46);
     flipped.push(c);
     if(flipped.length === 2){
       moves++;
@@ -224,6 +308,257 @@
     calmStage.style.display='block'; calmDone.style.display='none';
   });
   renderCalm();
+
+  // ===================================================================
+  // COLOR YOUR FEELINGS
+  // ===================================================================
+  const FEELING_COLORS = [
+    { color:'#F4B740', label:'Happy',    feeling:'happy'   },
+    { color:'#3FB3A2', label:'Calm',     feeling:'calm'    },
+    { color:'#FF8A65', label:'Angry',    feeling:'angry'   },
+    { color:'#6CC6FF', label:'Sad',      feeling:'sad'     },
+    { color:'#C77DFF', label:'Scared',   feeling:'anxious' },
+    { color:'#7BD389', label:'Grateful', feeling:'grateful'},
+    { color:'#FF6B9A', label:'Silly',    feeling:'laughing'},
+    { color:'#8B5E3C', label:'Tired',    feeling:'tired'   },
+  ];
+
+  // SVG coloring designs — each zone has a fill attribute students click to color
+  const COLOR_DESIGNS = [
+    // Garden design
+    `<circle cx="150" cy="240" r="50" fill="#E8F5E9" class="czone" data-zone="0"/>
+     <ellipse cx="150" cy="200" rx="30" ry="22" fill="#E8F5E9" class="czone" data-zone="1"/>
+     <circle cx="150" cy="140" r="38" fill="#FFF9C4" class="czone" data-zone="2"/>
+     <circle cx="110" cy="130" r="20" fill="#FCE4EC" class="czone" data-zone="3"/>
+     <circle cx="190" cy="130" r="20" fill="#FCE4EC" class="czone" data-zone="4"/>
+     <circle cx="130" cy="100" r="18" fill="#FCE4EC" class="czone" data-zone="5"/>
+     <circle cx="170" cy="100" r="18" fill="#FCE4EC" class="czone" data-zone="6"/>
+     <circle cx="150" cy="90" r="15" fill="#FCE4EC" class="czone" data-zone="7"/>
+     <rect x="143" y="200" width="14" height="50" fill="#C8E6C9" class="czone" data-zone="8"/>
+     <ellipse cx="90" cy="230" rx="28" ry="18" fill="#E1F5FE" class="czone" data-zone="9"/>
+     <ellipse cx="210" cy="225" rx="28" ry="18" fill="#E1F5FE" class="czone" data-zone="10"/>`,
+
+    // Sun & clouds
+    `<circle cx="150" cy="240" r="55" fill="#E3F2FD" class="czone" data-zone="0"/>
+     <circle cx="150" cy="130" r="50" fill="#FFF9C4" class="czone" data-zone="1"/>
+     <line x1="150" y1="60" x2="150" y2="40" stroke="#E0E0E0" stroke-width="6" stroke-linecap="round"/>
+     <line x1="198" y1="82" x2="212" y2="68" stroke="#E0E0E0" stroke-width="6" stroke-linecap="round"/>
+     <line x1="218" y1="130" x2="238" y2="130" stroke="#E0E0E0" stroke-width="6" stroke-linecap="round"/>
+     <ellipse cx="80" cy="80" rx="38" ry="26" fill="#E1F5FE" class="czone" data-zone="2"/>
+     <ellipse cx="60" cy="90" rx="28" ry="20" fill="#E1F5FE" class="czone" data-zone="3"/>
+     <ellipse cx="220" cy="70" rx="34" ry="22" fill="#F3E5F5" class="czone" data-zone="4"/>
+     <ellipse cx="200" cy="80" rx="26" ry="18" fill="#F3E5F5" class="czone" data-zone="5"/>`,
+
+    // Heart mandala
+    `<circle cx="150" cy="150" r="130" fill="#FFF3E0" class="czone" data-zone="0"/>
+     <circle cx="150" cy="150" r="90" fill="#FCE4EC" class="czone" data-zone="1"/>
+     <circle cx="150" cy="150" r="56" fill="#F3E5F5" class="czone" data-zone="2"/>
+     <circle cx="150" cy="150" r="28" fill="#E8F5E9" class="czone" data-zone="3"/>
+     <ellipse cx="150" cy="60" rx="22" ry="28" fill="#FFF9C4" class="czone" data-zone="4"/>
+     <ellipse cx="150" cy="240" rx="22" ry="28" fill="#FFF9C4" class="czone" data-zone="5"/>
+     <ellipse cx="60" cy="150" rx="28" ry="22" fill="#E3F2FD" class="czone" data-zone="6"/>
+     <ellipse cx="240" cy="150" rx="28" ry="22" fill="#E3F2FD" class="czone" data-zone="7"/>`,
+  ];
+
+  let currentDesignIdx = 0;
+  let activeColorIdx = 0;
+  const colorKey = 'swelli:colorHistory';
+
+  function loadColorDesign(){
+    const svg = document.getElementById('colorSVG');
+    // Pick design based on day of week so it rotates
+    currentDesignIdx = new Date().getDay() % COLOR_DESIGNS.length;
+    svg.innerHTML = COLOR_DESIGNS[currentDesignIdx];
+    // Restore any saved colors for today's card
+    const session = Swelli.getSession();
+    if(session){
+      const saved = JSON.parse(localStorage.getItem(colorKey + ':' + session.studentId + ':today') || '{}');
+      svg.querySelectorAll('.czone').forEach(z=>{
+        if(saved[z.dataset.zone]) z.setAttribute('fill', saved[z.dataset.zone]);
+      });
+    }
+    svg.querySelectorAll('.czone').forEach(z=>{
+      z.style.cursor = 'pointer';
+      z.addEventListener('click', ()=>{
+        z.setAttribute('fill', FEELING_COLORS[activeColorIdx].color);
+        saveTodayColors();
+      });
+    });
+  }
+
+  function saveTodayColors(){
+    const session = Swelli.getSession();
+    if(!session) return;
+    const svg = document.getElementById('colorSVG');
+    const data = {};
+    svg.querySelectorAll('.czone').forEach(z=>{ data[z.dataset.zone] = z.getAttribute('fill'); });
+    localStorage.setItem(colorKey + ':' + session.studentId + ':today', JSON.stringify(data));
+  }
+
+  function buildColorLegend(){
+    const legend = document.getElementById('colorLegend');
+    legend.innerHTML = '<div style="font-weight:800;font-size:13px;color:var(--ink-soft);margin-bottom:8px;">Color = Feeling</div>';
+    FEELING_COLORS.forEach((fc, i)=>{
+      const row = document.createElement('button');
+      row.className = 'color-swatch-row' + (i===0?' active-color':'');
+      row.innerHTML = `<span class="cswatch" style="background:${fc.color}"></span><span class="clabel">${fc.label}</span>`;
+      row.addEventListener('click', ()=>{
+        activeColorIdx = i;
+        document.querySelectorAll('.color-swatch-row').forEach(r=>r.classList.remove('active-color'));
+        row.classList.add('active-color');
+      });
+      legend.appendChild(row);
+    });
+  }
+
+  document.getElementById('saveColorBtn')?.addEventListener('click', ()=>{
+    saveTodayColors();
+    Swelli.updateLastEntry({ activity:'games', activityDetail:'Colored a feelings card' });
+    const t = document.getElementById('toast');
+    if(t){ t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2200); }
+  });
+
+  document.getElementById('viewHistoryBtn')?.addEventListener('click', ()=>{
+    const hist = document.getElementById('colorHistory');
+    hist.style.display = hist.style.display==='none' ? 'flex' : 'none';
+    if(hist.style.display==='flex') renderColorHistory();
+  });
+
+  function renderColorHistory(){
+    const session = Swelli.getSession();
+    const hist = document.getElementById('colorHistory');
+    hist.innerHTML = '<h3 style="width:100%;font-size:15px;margin:0 0 10px;">Past cards</h3>';
+    if(!session){ hist.innerHTML += '<p>No history yet.</p>'; return; }
+    const prefix = colorKey + ':' + session.studentId + ':';
+    let found = false;
+    for(let i=0;i<localStorage.length;i++){
+      const key = localStorage.key(i);
+      if(key && key.startsWith(prefix)){
+        found = true;
+        const label = key.replace(prefix,'');
+        const data = JSON.parse(localStorage.getItem(key)||'{}');
+        const mini = document.createElement('div');
+        mini.className = 'color-history-item';
+        const miniSVG = `<svg viewBox="0 0 300 300">${COLOR_DESIGNS[0].replace(/class="czone" data-zone="(\d+)"/g, (m, z)=>
+          `fill="${data[z]||'#f0f0f0'}"`)}</svg>`;
+        mini.innerHTML = miniSVG + `<div class="hist-label">${label}</div>`;
+        hist.appendChild(mini);
+      }
+    }
+    if(!found) hist.innerHTML += '<p style="color:var(--ink-soft);font-weight:700;font-size:13px;">No past cards yet — save today\'s to start your history!</p>';
+  }
+
+  buildColorLegend();
+  loadColorDesign();
+
+  // ===================================================================
+  // NAME THAT FEELING — JEOPARDY
+  // ===================================================================
+  const JEOPARDY_DATA = {
+    'Name That Feeling': [
+      { pts:100, q:"You feel this way when something exciting is about to happen.", a:"Excited" },
+      { pts:200, q:"When someone takes something of yours without asking, you might feel this.", a:"Angry" },
+      { pts:300, q:"This is how you feel when you miss someone you love.", a:"Sad or Lonely" },
+      { pts:400, q:"When you have so much to do that you don't know where to start, you feel this.", a:"Overwhelmed" },
+    ],
+    'Coping Strategies': [
+      { pts:100, q:"Taking slow, deep breaths when you're upset is called this.", a:"Deep breathing" },
+      { pts:200, q:"Writing about your feelings in a notebook is called this.", a:"Journaling" },
+      { pts:300, q:"Talking to a trusted adult when something is wrong is an example of this.", a:"Asking for help / Seeking support" },
+      { pts:400, q:"Counting to 10 before reacting gives you time to do this.", a:"Calm down / Control your reaction" },
+    ],
+    'Size of the Problem': [
+      { pts:100, q:"You forgot your pencil. Is this a small, medium, or big problem?", a:"Small problem" },
+      { pts:200, q:"Someone said something mean about you. Small, medium, or big?", a:"Medium problem" },
+      { pts:300, q:"There's a fire alarm going off. Small, medium, or big?", a:"Big problem / Emergency" },
+      { pts:400, q:"You got the wrong lunch by mistake. On a scale of 1–5, how big is this?", a:"1 or 2 — small problem" },
+    ],
+    'What Would You Do?': [
+      { pts:100, q:"Your friend looks sad and is sitting alone at lunch. What would you do?", a:"Ask if they're okay / Sit with them" },
+      { pts:200, q:"You accidentally broke something belonging to someone else. What would you do?", a:"Tell the truth and apologize" },
+      { pts:300, q:"Someone keeps calling you a name you don't like. What would you do?", a:"Tell them to stop, then get an adult if it continues" },
+      { pts:400, q:"You feel really angry and want to say something mean. What would you do?", a:"Take deep breaths / Walk away / Count to 10 before responding" },
+    ],
+  };
+
+  let jeopScore = 0;
+  let jeopUsed = new Set();
+  let jeopCurrentData = null;
+
+  function buildJeopBoard(){
+    const grid = document.getElementById('jeopGrid');
+    const cats = Object.keys(JEOPARDY_DATA);
+    grid.innerHTML = '';
+    cats.forEach(cat=>{
+      const header = document.createElement('div');
+      header.className = 'jeopardy-cat-header';
+      header.textContent = cat;
+      grid.appendChild(header);
+    });
+    // Build rows by point value (all 100s, then 200s, etc.)
+    [100,200,300,400].forEach(pts=>{
+      cats.forEach(cat=>{
+        const key = cat+':'+pts;
+        const tile = document.createElement('button');
+        tile.className = 'jeopardy-tile' + (jeopUsed.has(key)?' used':'');
+        tile.textContent = jeopUsed.has(key) ? '✓' : pts;
+        if(!jeopUsed.has(key)){
+          tile.addEventListener('click', ()=> showJeopQuestion(cat, pts, key));
+        }
+        grid.appendChild(tile);
+      });
+    });
+    document.getElementById('jeopScore').textContent = jeopScore;
+    if(jeopUsed.size === 16){
+      document.getElementById('jeopardyBoard').style.display='none';
+      document.getElementById('jeopWin').style.display='block';
+      document.getElementById('jeopFinalScore').textContent = jeopScore;
+    }
+  }
+
+  function showJeopQuestion(cat, pts, key){
+    const q = JEOPARDY_DATA[cat].find(x=>x.pts===pts);
+    jeopCurrentData = { cat, pts, key, a:q.a };
+    document.getElementById('jeopCat').textContent = cat;
+    document.getElementById('jeopPts').textContent = pts + ' pts';
+    document.getElementById('jeopQ').textContent = q.q;
+    document.getElementById('jeopInput').value = '';
+    document.getElementById('jeopAnswer').style.display='none';
+    document.getElementById('jeopAddPts').textContent = pts;
+    document.getElementById('jeopardyBoard').style.display='none';
+    document.getElementById('jeopQuestion').style.display='block';
+    document.getElementById('jeopWin').style.display='none';
+  }
+
+  document.getElementById('jeopReveal')?.addEventListener('click', ()=>{
+    document.getElementById('jeopCorrect').textContent = 'Answer: ' + jeopCurrentData.a;
+    document.getElementById('jeopAnswer').style.display='block';
+  });
+  document.getElementById('jeopGotIt')?.addEventListener('click', ()=>{
+    jeopScore += jeopCurrentData.pts;
+    jeopUsed.add(jeopCurrentData.key);
+    document.getElementById('jeopQuestion').style.display='none';
+    document.getElementById('jeopardyBoard').style.display='block';
+    buildJeopBoard();
+  });
+  document.getElementById('jeopMissed')?.addEventListener('click', ()=>{
+    jeopUsed.add(jeopCurrentData.key);
+    document.getElementById('jeopQuestion').style.display='none';
+    document.getElementById('jeopardyBoard').style.display='block';
+    buildJeopBoard();
+  });
+  document.getElementById('jeopBack')?.addEventListener('click', ()=>{
+    document.getElementById('jeopQuestion').style.display='none';
+    document.getElementById('jeopardyBoard').style.display='block';
+  });
+  document.getElementById('jeopReset')?.addEventListener('click', ()=>{
+    jeopScore=0; jeopUsed.clear();
+    document.getElementById('jeopWin').style.display='none';
+    document.getElementById('jeopardyBoard').style.display='block';
+    buildJeopBoard();
+  });
+
+  buildJeopBoard();
 </script>
 </body>
 </html>

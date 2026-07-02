@@ -14,10 +14,23 @@ const Swelli = (() => {
   const SESSION_KEY = 'swelli:session';
   const entriesKey = (studentId) => `swelli:entries:${studentId}`;
 
-  // Paste your Apps Script Web App URL here (ends in /exec) once deployed.
-  // Leave blank and everything still works locally — entries/flags just
-  // won't sync to the Sheet or trigger email alerts.
-  const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwAwQPaMP4z78QKEzgxcQzEiBWaR2R-_XNDL77XnBwzpg4zIk1ZAZDu_83XVygB_aUFWA/exec';
+  // Auto-inject Iconify web-component script so every page gets Fluent Emoji
+  // without needing a <script> tag in each HTML file.
+  (function(){
+    if(typeof customElements !== 'undefined' && !customElements.get('iconify-icon')){
+      const s = document.createElement('script');
+      s.src = 'https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js';
+      s.async = true;
+      document.head.appendChild(s);
+    }
+  })();
+
+  // Render a Fluent Emoji via Iconify.
+  function emoji(iconName, size){
+    return `<iconify-icon icon="${iconName}" width="${size||36}" height="${size||36}" style="display:inline-flex;align-items:center;justify-content:center;"></iconify-icon>`;
+  }
+
+  const BACKEND_URL = '';
 
   function postToBackend(type, payload){
     if(!BACKEND_URL) return;
@@ -43,25 +56,34 @@ const Swelli = (() => {
   }
 
 
-  // Demo roster of students flagged as having a support plan with their
+  // Fluent Emoji icon names (via Iconify fluent-emoji pack, MIT licensed, by Microsoft)
+  const BUDDY_ICONS = {
+    fox:    'fluent-emoji:fox',
+    owl:    'fluent-emoji:owl',
+    turtle: 'fluent-emoji:turtle',
+    bee:    'fluent-emoji:honeybee',
+  };
+  const MOOD_ICONS = {
+    happy:    'fluent-emoji:smiling-face-with-smiling-eyes',
+    laughing: 'fluent-emoji:face-with-tears-of-joy',
+    tired:    'fluent-emoji:sleepy-face',
+    angry:    'fluent-emoji:pouting-face',
+    sad:      'fluent-emoji:crying-face',
+    anxious:  'fluent-emoji:worried-face',
+  };
+  const MOOD_LABELS = {
+    happy:'Happy', laughing:'Silly', tired:'Tired',
+    angry:'Angry', sad:'Sad', anxious:'Worried',
+  };
+  const GROWTH_STAGES = [
+    'fluent-emoji:seedling','fluent-emoji:seedling',
+    'fluent-emoji:herb','fluent-emoji:herb','fluent-emoji:herb',
+    'fluent-emoji:cherry-blossom','fluent-emoji:cherry-blossom','fluent-emoji:cherry-blossom',
+    'fluent-emoji:sunflower','fluent-emoji:sunflower','fluent-emoji:sunflower','fluent-emoji:sunflower',
+  ];
   // counselor. In production this would come from your roster system —
   // for the pilot it's a simple hardcoded lookup by slugified first name.
   const PLAN_STUDENTS = ['maya', 'sofia'];
-
-  const BUDDY_ICONS = { fox: 'buddy-fox', owl: 'buddy-owl', turtle: 'buddy-turtle', bee: 'buddy-bee' };
-  const MOOD_ICONS = {
-    happy: 'mood-happy', laughing: 'mood-silly', tired: 'mood-tired',
-    angry: 'mood-angry', sad: 'mood-sad', anxious: 'mood-worried',
-  };
-  const MOOD_LABELS = {
-    happy: 'Happy', laughing: 'Silly', tired: 'Tired',
-    angry: 'Angry', sad: 'Sad', anxious: 'Worried',
-  };
-  const GROWTH_STAGES = [
-    'growth-seed','growth-seed','growth-sprout','growth-sprout','growth-sprout',
-    'growth-bud','growth-bud','growth-bud',
-    'growth-bloom','growth-bloom','growth-bloom','growth-bloom',
-  ];
 
   function slugify(s){
     return (s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -315,7 +337,7 @@ const Swelli = (() => {
   }
 
   return {
-    storageAvailable, icon, slugify,
+    storageAvailable, icon, emoji, slugify,
     createSession, getSession, clearSession, requireSession,
     getEntries, addEntry, updateLastEntry, computeStats, relativeDay,
     startPreview, endPreview,

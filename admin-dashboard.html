@@ -113,8 +113,8 @@
       card.className = 'student-card' + (isUpper ? ' unavailable' : '');
 
       const buddyHtml = isUpper
-        ? `<div class="buddy"><svg class="icon"><use href="icons.svg#icon-cap"/></svg></div>`
-        : `<div class="buddy"><svg class="icon"><use href="icons.svg#${Swelli.BUDDY_ICONS[s.buddy]}"/></svg></div>`;
+        ? `<div class="buddy">${Swelli.emoji('fluent-emoji:graduation-cap', 28)}</div>`
+        : `<div class="buddy">${Swelli.emoji(Swelli.BUDDY_ICONS[s.buddy] || 'fluent-emoji:fox', 28)}</div>`;
 
       const planHtml = (!isUpper && s.hasPlan) ? `<span class="plan-badge"><svg class="icon"><use href="icons.svg#icon-flag"/></svg>Has a plan</span>` : '';
       const flagHtml = (!isUpper && s.flag) ? `<span class="flag"><svg class="icon icon-sm" style="vertical-align:-2px;"><use href="icons.svg#icon-warning"/></svg> ${s.flag}</span>` : '';
@@ -122,7 +122,7 @@
 
       const moodStreakHtml = isUpper
         ? ''
-        : `<div class="mood-streak"><svg class="icon icon-mood"><use href="icons.svg#${Swelli.MOOD_ICONS[s.mood]}"/></svg><span><svg class="icon" style="vertical-align:-3px;"><use href="icons.svg#icon-flame"/></svg> ${s.streak}d</span></div>`;
+        : `<div class="mood-streak">${Swelli.emoji(Swelli.MOOD_ICONS[s.mood] || 'fluent-emoji:smiling-face-with-smiling-eyes', 28)}<span><svg class="icon" style="vertical-align:-3px;color:var(--coral);"><use href="icons.svg#icon-flame"/></svg> ${s.streak}d</span></div>`;
 
       const buttonHtml = isUpper
         ? `<button class="btn btn-secondary view-btn" disabled>Coming soon</button>`

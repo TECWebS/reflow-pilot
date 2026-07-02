@@ -126,7 +126,7 @@
   if(session){
     document.getElementById('greeting').textContent = `Hi, ${session.name}!`;
     document.getElementById('pillName').textContent = session.name;
-    document.getElementById('avatarDot').innerHTML = Swelli.icon(Swelli.BUDDY_ICONS[session.buddy] || 'buddy-fox', 'icon icon-sm');
+    document.getElementById('avatarDot').innerHTML = Swelli.emoji(Swelli.BUDDY_ICONS[session.buddy] || 'fluent-emoji:fox', 28);
 
     if(session.isPreview){
       document.getElementById('previewBanner').style.display = 'flex';
@@ -152,7 +152,7 @@
         const span = document.createElement('span');
         span.className = 'sprout';
         span.style.animationDelay = (i*0.05)+'s';
-        span.innerHTML = Swelli.icon(Swelli.GROWTH_STAGES[i % Swelli.GROWTH_STAGES.length], 'icon icon-lg');
+        span.innerHTML = Swelli.emoji(Swelli.GROWTH_STAGES[i % Swelli.GROWTH_STAGES.length], 38);
         bed.appendChild(span);
       }
     }
@@ -168,7 +168,7 @@
         row.className = 'entry-row';
         const activityLabel = { writing:'Wrote it out', drawing:'Drew it out', games:'Played it out', mapping:'Mapped it out' }[e.activity];
         row.innerHTML = `
-          <svg class="icon icon-mood"><use href="icons.svg#${Swelli.MOOD_ICONS[e.mood] || 'mood-happy'}"/></svg>
+          ${Swelli.emoji(Swelli.MOOD_ICONS[e.mood] || 'fluent-emoji:smiling-face-with-smiling-eyes', 34)}
           <div>
             <div class="what">${Swelli.MOOD_LABELS[e.mood] || 'Checked in'}</div>
             <div class="meta">${Swelli.relativeDay(e.ts)}${activityLabel ? ' · ' + activityLabel : ''}</div>

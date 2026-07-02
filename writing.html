@@ -34,12 +34,14 @@
   #padText:focus{ outline:none; }
   .pad-footer{ display:flex; align-items:center; justify-content:space-between; margin-top: 16px; flex-wrap:wrap; gap:10px; }
   .word-count{ font-size: 13px; font-weight:700; color: var(--ink-soft); }
+  .sticker-bar{ display:flex; flex-wrap:wrap; gap:6px; padding:10px 0 4px; }
+  .sticker-bar button{ font-size:22px; background:none; border:2px solid var(--line); border-radius:8px; padding:4px; }
+  .sticker-bar button:hover{ border-color:var(--mint); }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <button class="back" onclick="location.href='unwind.html'" aria-label="Back">←</button>
   <div class="brand"><span class="brand-name">Swelli for Education</span></div>
   <nav>
     <a href="home.html">Home</a>
@@ -59,6 +61,9 @@
   <div class="notebook">
     <textarea id="padText" placeholder="Start writing here…"></textarea>
   </div>
+
+  <div style="font-weight:800;font-size:13px;color:var(--ink-soft);margin-top:14px;margin-bottom:0;">Add a sticker</div>
+  <div class="sticker-bar" id="writingStickers"></div>
 
   <div class="pad-footer">
     <span class="word-count" id="wordCount">0 words</span>
@@ -91,6 +96,29 @@
   pad.addEventListener('input', ()=>{
     wordCount = pad.value.trim().split(/\s+/).filter(Boolean).length;
     wc.textContent = `${wordCount} word${wordCount===1?'':'s'}`;
+  });
+
+  // ---- Sticker bar: inserts emoji text at cursor in the textarea ----
+  const WRITING_STICKERS = [
+    ['fluent-emoji:red-heart','❤️'],['fluent-emoji:star','⭐'],['fluent-emoji:sun','☀️'],
+    ['fluent-emoji:rainbow','🌈'],['fluent-emoji:seedling','🌱'],['fluent-emoji:fire','🔥'],
+    ['fluent-emoji:sparkles','✨'],['fluent-emoji:balloon','🎈'],['fluent-emoji:trophy','🏆'],
+    ['fluent-emoji:butterfly','🦋'],['fluent-emoji:musical-note','🎵'],['fluent-emoji:four-leaf-clover','🍀'],
+  ];
+  const sBar = document.getElementById('writingStickers');
+  WRITING_STICKERS.forEach(([icon, fallback])=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.innerHTML = `<iconify-icon icon="${icon}" width="22" height="22"></iconify-icon>`;
+    b.addEventListener('click', ()=>{
+      const ta = pad;
+      const start = ta.selectionStart, end = ta.selectionEnd;
+      ta.value = ta.value.slice(0, start) + fallback + ta.value.slice(end);
+      ta.selectionStart = ta.selectionEnd = start + fallback.length;
+      ta.focus();
+      ta.dispatchEvent(new Event('input'));
+    });
+    sBar.appendChild(b);
   });
 
   const toast = document.getElementById('toast');

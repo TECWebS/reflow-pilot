@@ -31,19 +31,28 @@
     padding: 8px 14px; font-size:13px; font-weight:700; color: var(--mint-deep);
   }
   .chip:hover{ background: var(--mint-pale); }
-  .path-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; overflow-x:auto; padding: 26px 6px 6px; }
-  .path-node{ display:flex; flex-direction:column; align-items:center; gap:8px; min-width: 86px; flex-shrink:0; }
-  .path-node .bubble{
-    width:60px; height:60px; border-radius:50%; background: var(--mint-pale); display:flex; align-items:center; justify-content:center;
-    border: 3px solid var(--mint);
+  .path-progress-wrap{ display:flex; align-items:center; gap:0; margin: 18px 0 22px; overflow-x:auto; padding:4px 0 10px; }
+  .path-bubble{
+    width:54px; height:54px; border-radius:50%; border:3px solid var(--line); background:#fff;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Baloo 2';
+    font-weight:800; font-size:18px; transition: background .2s, border-color .2s;
   }
-  .path-node .bubble .icon{ width:26px; height:26px; color: var(--mint-deep); }
-  .path-node.start .bubble{ background: #FFE3D6; border-color: var(--coral); }
-  .path-node.start .bubble .icon{ width:30px; height:30px; color:inherit; }
-  .path-node.goal .bubble{ background: #FFF3D2; border-color: var(--gold-deep); }
-  .path-node.goal .bubble .icon{ color: var(--gold-deep); }
-  .path-node .cap{ font-size:12px; font-weight:800; text-align:center; color: var(--ink-soft); max-width:90px; }
-  .path-line{ flex:1; height:3px; background: repeating-linear-gradient(90deg, var(--mint) 0 8px, transparent 8px 16px); margin-top: 28px; min-width: 30px; }
+  .path-bubble.start{ border-color:var(--coral); background:#FFE3D6; }
+  .path-bubble.done{ border-color:var(--mint-deep); background:var(--mint-deep); color:#fff; }
+  .path-line-seg{ flex:1; height:3px; background:var(--line); min-width:20px; transition:background .2s; }
+  .path-line-seg.done{ background:var(--mint-deep); }
+  .final-step-card{
+    display:flex; align-items:center; gap:14px; background:var(--cream); border-radius:var(--radius-md);
+    padding:14px 16px; border:2px solid var(--line); margin-bottom:10px; transition: border-color .2s, background .2s;
+  }
+  .final-step-card.done{ background:var(--mint-paler); border-color:var(--mint); }
+  .step-check{
+    width:32px; height:32px; border-radius:50%; border:2px solid var(--line); background:#fff;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px;
+  }
+  .final-step-card.done .step-check{ background:var(--mint-deep); border-color:var(--mint-deep); color:#fff; }
+  .final-step-card:not(.done) .step-check::after{ content:''; }
+  .final-step-card.done .step-check::after{ content:'✓'; }
   .final-steps{ display:flex; flex-direction:column; gap:12px; margin-top: 22px; }
   .step-card{ display:flex; gap:14px; align-items:flex-start; background: var(--cream); border-radius: var(--radius-md); padding: 14px 16px; }
   .step-card .n{
@@ -57,7 +66,6 @@
 <body>
 
 <div class="topbar">
-  <button class="back" onclick="location.href='unwind.html'" aria-label="Back">←</button>
   <div class="brand"><span class="brand-name">Swelli for Education</span></div>
   <nav>
     <a href="home.html">Home</a>
@@ -101,12 +109,21 @@
     </div>
   </div>
 
-  <!-- Step 4: final path -->
+  <!-- Step 4: interactive checklist path -->
   <div class="card map-step" id="step4">
-    <h2 style="margin-bottom:4px;">Your path</h2>
-    <p class="hint">Here's the route you built, in the order you chose.</p>
-    <div class="path-row" id="pathRow"></div>
+    <h2 style="margin-bottom:4px;">Your path is ready</h2>
+    <p class="hint">Check off each step as you work through it. The bubbles fill in as you go.</p>
+
+    <!-- Visual progress bar -->
+    <div class="path-progress-wrap" id="pathProgressWrap"></div>
+
+    <!-- Step checklist -->
     <div class="final-steps" id="finalSteps"></div>
+
+    <div class="path-complete" id="pathComplete" style="display:none;">
+      <p style="font-weight:800; font-size:16px; color:var(--mint-deep); text-align:center;">You worked through your whole plan!</p>
+    </div>
+
     <div class="actions-row">
       <button class="btn btn-secondary" id="saveMapBtn">Save my map</button>
       <button class="btn btn-ghost" id="startOverBtn">Make a new map</button>
@@ -130,7 +147,7 @@
   feelings.forEach(f=>{
     const b = document.createElement('button');
     b.className = 'pick-card';
-    b.innerHTML = `<svg class="icon"><use href="icons.svg#${Swelli.MOOD_ICONS[f.id]}"/></svg>${f.label}`;
+    b.innerHTML = `${Swelli.emoji(Swelli.MOOD_ICONS[f.id], 32)}<span style="font-size:12px;font-weight:800;">${f.label}</span>`;
     b.addEventListener('click', ()=>{
       chosenFeeling = f;
       feelGrid.querySelectorAll('.pick-card').forEach(c=>c.classList.remove('selected'));
@@ -290,18 +307,59 @@
     document.addEventListener('pointerup', onUp);
   }
 
-  // ---- Step 4: build final path from the user's chosen order ----
+  // ---- Step 4: build interactive checklist from the user's chosen order ----
+  let stepsDone = [];
+
+  function renderStep4(){
+    stepsDone = new Array(stepsArray.length).fill(false);
+
+    // Progress bubble row
+    const progressWrap = document.getElementById('pathProgressWrap');
+    progressWrap.innerHTML = '';
+    const startBubble = document.createElement('div');
+    startBubble.className = 'path-bubble start';
+    startBubble.innerHTML = Swelli.emoji(Swelli.MOOD_ICONS[chosenFeeling.id], 28);
+    progressWrap.appendChild(startBubble);
+
+    stepsArray.forEach((_,i)=>{
+      const line = document.createElement('div');
+      line.className = 'path-line-seg';
+      line.id = `pline-${i}`;
+      progressWrap.appendChild(line);
+      const bubble = document.createElement('div');
+      bubble.className = 'path-bubble';
+      bubble.id = `pbubble-${i}`;
+      bubble.textContent = i + 1;
+      progressWrap.appendChild(bubble);
+    });
+
+    // Checklist
+    const list = document.getElementById('finalSteps');
+    list.innerHTML = '';
+    stepsArray.forEach((text, i)=>{
+      const card = document.createElement('div');
+      card.className = 'final-step-card';
+      card.id = `fstep-${i}`;
+      card.innerHTML = `<div class="step-check" id="scheck-${i}"></div><div>${text}</div>`;
+      card.addEventListener('click', ()=> toggleStep(i));
+      list.appendChild(card);
+    });
+    document.getElementById('pathComplete').style.display='none';
+  }
+
+  function toggleStep(i){
+    stepsDone[i] = !stepsDone[i];
+    const card = document.getElementById(`fstep-${i}`);
+    const line = document.getElementById(`pline-${i}`);
+    const bubble = document.getElementById(`pbubble-${i}`);
+    card.classList.toggle('done', stepsDone[i]);
+    if(line) line.classList.toggle('done', stepsDone[i]);
+    if(bubble){ bubble.classList.toggle('done', stepsDone[i]); if(stepsDone[i]) bubble.textContent = '✓'; else bubble.textContent = i+1; }
+    if(stepsDone.every(Boolean)) document.getElementById('pathComplete').style.display='block';
+  }
+
   document.getElementById('toStep4').addEventListener('click', ()=>{
-    const pathRow = document.getElementById('pathRow');
-    const line = `<div class="path-line"></div>`;
-    const startNode = `<div class="path-node start"><div class="bubble"><svg class="icon"><use href="icons.svg#${Swelli.MOOD_ICONS[chosenFeeling.id]}"/></svg></div><div class="cap">You are here</div></div>`;
-    const midNodes = stepsArray.map((_,i)=>`<div class="path-node"><div class="bubble"><svg class="icon"><use href="icons.svg#icon-footprint"/></svg></div><div class="cap">Step ${i+1}</div></div>${line}`).join('');
-    const goalNode = `<div class="path-node goal"><div class="bubble"><svg class="icon"><use href="icons.svg#icon-target"/></svg></div><div class="cap">Where you're headed</div></div>`;
-    pathRow.innerHTML = startNode + line + midNodes + goalNode;
-
-    document.getElementById('finalSteps').innerHTML = stepsArray
-      .map((s,i)=>`<div class="step-card"><div class="n">${i+1}</div><div>${s}</div></div>`).join('');
-
+    renderStep4();
     showStep('step4');
   });
 
